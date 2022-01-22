@@ -1,0 +1,26 @@
+﻿using MDD4All.SpecIF.DataModels;
+using MDD4All.SpecIF.DataProvider.Contracts;
+
+namespace MDD4All.SpecIF.ViewModels
+{
+    public class DataTypeViewModel
+    {
+        public ISpecIfMetadataReader DataProvider { get; set; }
+
+        public DataType DataType { get; set; }
+
+        public DataTypeViewModel(DataType dataType, ISpecIfMetadataReader dataProvider)
+        {
+            DataType = dataType;
+            DataProvider = dataProvider;
+        }
+
+        private string _editType = "edit";
+
+        public string EditType
+        {
+            get { return _editType; }
+            set { _editType = value; }
+        }
+    }
+}
