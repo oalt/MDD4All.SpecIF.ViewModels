@@ -299,6 +299,23 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string Creator
+        {
+            get
+            {
+                string result = "";
+
+                List<Value> creator = Resource.GetPropertyValue(new Key("PC-creator", "1"));
+
+                if(creator.Count > 0)
+                {
+                    result = creator[0].StringValue;
+                }
+
+                return result;
+            }
+        }
+
         public string ClassifierName
         {
             get
@@ -368,6 +385,16 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     result += " :" + classifier;
                 }
+
+                return result;
+            }
+        }
+
+        public string Timestamp
+        {
+            get
+            {
+                string result = Resource.ChangedAt.ToString();
 
                 return result;
             }
@@ -477,18 +504,28 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (Resource != null && Resource.Properties != null)
                 {
-                    foreach (Property property in Resource.Properties)
+                    foreach(PropertyClass propertyClass in PropertyClasses)
                     {
+                        Property property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
+
+                        string propertyValue = "";
+
+                        if(property!= null)
+                        {
+                            propertyValue = property.GetStringValue(_metadataReader);
+                        }
+
                         PropertyViewModel propertyViewModel = new PropertyViewModel()
                         {
-                            TypeName = property.GetClassTitle(_metadataReader),
-                            Value = property.GetStringValue(_metadataReader),
-                            PropertyClassID = property.Class.ID,
-                            PropertyClassRevisionString = property.Class.Revision
+                            TypeName = propertyClass.Title,
+                            Value = propertyValue,
+                            PropertyClassID = propertyClass.ID,
+                            PropertyClassRevisionString = propertyClass.Revision
                         };
 
                         result.Add(propertyViewModel);
                     }
+
                 }
 
                 return result;
