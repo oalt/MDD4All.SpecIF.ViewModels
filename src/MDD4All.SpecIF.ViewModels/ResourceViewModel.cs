@@ -4,7 +4,6 @@ using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
 using MDD4All.SpecIF.DataModels.Helpers;
@@ -40,7 +39,16 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
                                  ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, string resourceId) : this(metadataReader, dataReader, dataWriter)
+                                 ISpecIfDataWriter dataWriter,
+                                 Resource resource) : this(metadataReader, dataReader, dataWriter)
+        {
+            _resource = resource;
+        }
+
+        public ResourceViewModel(ISpecIfMetadataReader metadataReader,
+                                 ISpecIfDataReader dataReader,
+                                 ISpecIfDataWriter dataWriter, 
+                                 string resourceId) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = _specIfDataReader.GetResourceByKey(
                 new Key(resourceId)
@@ -49,19 +57,14 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
                                  ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, string resourceId, string revision) : this(metadataReader, dataReader, dataWriter)
+                                 ISpecIfDataWriter dataWriter, 
+                                 string resourceId, 
+                                 string revision) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = _specIfDataReader.GetResourceByKey(
                 new Key() { ID = resourceId, Revision = revision }
                 );
 
-        }
-
-        public ResourceViewModel(ISpecIfMetadataReader metadataReader,
-                                 ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, Resource newResource) : this(metadataReader, dataReader, dataWriter)
-        {
-            _resource = newResource;
         }
 
         private void InitializeCommands()
@@ -84,13 +87,7 @@ namespace MDD4All.SpecIF.ViewModels
             set { _isNew = value; }
         }
 
-        private string _editType = "edit";
-
-        public string EditType
-        {
-            get { return _editType; }
-            set { _editType = value; }
-        }
+        public bool IsInEditMode { get; set; }
 
         private string _viewSource = "";
 
@@ -145,93 +142,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private Node _node;
-
-        public Node Node
-        {
-            get { return _node; }
-        }
-
-        private string _nodeID = "";
-
-        public string NodeID
-        {
-            get
-            {
-                string result = "";
-                if (_node != null)
-                {
-                    result = _node.ID;
-                }
-                else
-                {
-                    result = _nodeID;
-                }
-                return result;
-            }
-
-            set
-            {
-                _nodeID = value;
-            }
-        }
-
-
-        public ObservableCollection<ResourceViewModel> Children
-        {
-            get
-            {
-                ObservableCollection<ResourceViewModel> result = new ObservableCollection<ResourceViewModel>();
-
-                int counter = 0;
-                if (_node.Nodes != null)
-                {
-                    foreach (Node child in _node.Nodes)
-                    {
-                        ResourceViewModel resourceViewModel = new ResourceViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
-
-                        resourceViewModel.Parent = this;
-                        resourceViewModel.Index = counter;
-                        resourceViewModel.Depth = Depth + 1;
-                        counter++;
-
-                        result.Add(resourceViewModel);
-                    }
-                }
-
-                return result;
-            }
-        }
-
-        private ResourceViewModel _parent = null;
-
-        public ResourceViewModel Parent
-        {
-            get
-            {
-                return _parent;
-            }
-
-            set
-            {
-                _parent = value;
-            }
-        }
-
-        private int _index = 0;
-
-        public int Index
-        {
-            get
-            {
-                return _index;
-            }
-
-            set
-            {
-                _index = value;
-            }
-        }
+        
         public string Type
         {
             get
@@ -243,28 +154,17 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public string Level
+        private Node _node;
+
+        public Node Node
         {
-            get
-            {
-                string result = "";
-
-                result = "" + (Index + 1);
-
-                ResourceViewModel item = this;
-
-                while (item.Parent != null)
-                {
-                    result = (item.Parent.Index + 1) + "." + result;
-                    item = item.Parent;
-                }
-
-                return result;
-            }
+            get { return _node; }
+            set { _node = value; }
         }
 
 
-        public int Depth { get; set; }
+
+
 
         public string Status
         {
@@ -507,20 +407,23 @@ namespace MDD4All.SpecIF.ViewModels
                     foreach(PropertyClass propertyClass in PropertyClasses)
                     {
                         Property property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
-
+                        
                         string propertyValue = "";
 
                         if(property!= null)
                         {
                             propertyValue = property.GetStringValue(_metadataReader);
                         }
-
-                        PropertyViewModel propertyViewModel = new PropertyViewModel()
+                        else
                         {
-                            TypeName = propertyClass.Title,
-                            Value = propertyValue,
-                            PropertyClassID = propertyClass.ID,
-                            PropertyClassRevisionString = propertyClass.Revision
+                            property = new Property(new Key(propertyClass.ID, propertyClass.Revision), "");
+                        }
+
+                        PropertyViewModel propertyViewModel = new PropertyViewModel(MetadataReader, property)
+                        {
+                            
+                            Value = propertyValue
+                            
                         };
 
                         result.Add(propertyViewModel);

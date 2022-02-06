@@ -5,9 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using System.Collections.ObjectModel;
-using MDD4All.SpecIF.ViewModels.Tree;
-using MDD4All.SpecIF.ViewModels.Models.JsTree;
 using System;
+using MDD4All.SpecIF.ViewModels.Cache;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -15,38 +14,39 @@ namespace MDD4All.SpecIF.ViewModels
     {
 
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
-                                 ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter,
-                                 Key id)
+                                  ISpecIfDataReader dataReader,
+                                  ISpecIfDataWriter dataWriter,
+                                  Key key)
         {
             _metadataReader = metadataReader;
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
 
-            _hierarchyId = id;
+            HierarchyKey = key;
             InitializeData();
         }
 
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
-                                 ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, Node hierarchy)
+                                  ISpecIfDataReader dataReader,
+                                  ISpecIfDataWriter dataWriter, 
+                                  Node hierarchy)
         {
             _metadataReader = metadataReader;
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
 
             _hierarchyNode = hierarchy;
-            _hierarchyId = new Key(hierarchy.ID, hierarchy.Revision);
+            HierarchyKey = new Key(hierarchy.ID, hierarchy.Revision);
             InitializeData();
         }
 
         private void InitializeData()
         {
-            RootNodes = new ObservableCollection<ResourceViewModel>();
+            RootNodes = new ObservableCollection<HierarchyViewModel>();
 
             if (_hierarchyNode == null)
             {
-                _hierarchyNode = _specIfDataReader.GetHierarchyByKey(new Key(_hierarchyId.ID, _hierarchyId.Revision));
+                _hierarchyNode = _specIfDataReader.GetHierarchyByKey(new Key(HierarchyKey.ID, HierarchyKey.Revision));
             }
 
             if (_hierarchyNode != null)
@@ -58,11 +58,11 @@ namespace MDD4All.SpecIF.ViewModels
                     {
                         Node childNode = _specIfDataReader.GetHierarchyByKey(nodeReference);
 
-                        ResourceViewModel resourceViewModel = new ResourceViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
-                        resourceViewModel.Index = counter;
-                        resourceViewModel.Depth = 1;
-                        resourceViewModel.HierarchyID = _hierarchyId;
-                        RootNodes.Add(resourceViewModel);
+                        HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
+                        hierarchyViewModel.Index = counter;
+                        hierarchyViewModel.Depth = 1;
+                        hierarchyViewModel.HierarchyKey = HierarchyKey;
+                        RootNodes.Add(hierarchyViewModel);
 
                         counter++;
                     }
@@ -70,40 +70,14 @@ namespace MDD4All.SpecIF.ViewModels
                     //InitializeBootstrapTreeDataModel();
                 }
 
-                _hierarchy = _specIfDataReader.GetResourceByKey(_hierarchyNode.ResourceReference);
+                ReferencedResource = CachedViewModelFactory.GetResourceViewModel(_hierarchyNode.ResourceReference,
+                                                                                 MetadataReader,
+                                                                                 DataReader,
+                                                                                 DataWriter);
+                //_hierarchy = _specIfDataReader.GetResourceByKey(_hierarchyNode.ResourceReference);
             }
         }
 
-
-
-        //private void InitializeBootstrapTreeDataModel()
-        //{
-
-        //    _bootstrapTreeDataModel = new BootstrapTreeNode()
-        //    {
-        //        Text = _hierarchy.Title
-        //    };
-
-        //    foreach(ResourceViewModel resourceViewModel in RootNodes)
-        //    {
-        //        InitializeBootstrapTreeNodesRecursively(_bootstrapTreeDataModel, resourceViewModel);
-        //    }
-        //}
-
-        //private void InitializeBootstrapTreeNodesRecursively(BootstrapTreeNode parentTreeNode, ResourceViewModel parentResource)
-        //{
-        //    foreach(ResourceViewModel childModel in parentResource.Children)
-        //    {
-        //        BootstrapTreeNode treeNode = new BootstrapTreeNode()
-        //        {
-        //            Text = childModel.Title
-        //        };
-
-        //        parentTreeNode.Nodes.Add(treeNode);
-
-        //        InitializeBootstrapTreeNodesRecursively(treeNode, childModel);
-        //    }
-        //}
 
 
         private ISpecIfMetadataReader _metadataReader;
@@ -142,35 +116,32 @@ namespace MDD4All.SpecIF.ViewModels
             set { _editType = value; }
         }
 
-        private Key _hierarchyId;
 
-        public Key HierarchyId
-        {
-            get
-            {
-                return _hierarchyId;
-            }
-        }
+
+        public Key HierarchyKey { get; set; }
+
+        public ResourceViewModel ReferencedResource { get; set; }
+
 
         public string Type
         {
             get
             {
                 string result = "";
-                result = Hierarchy.GetTypeName(_metadataReader);
+                result = ReferencedResource.Resource.GetTypeName(_metadataReader);
                 return result;
             }
         }
 
-        private List<ResourceViewModel> _linearResourceList;
+        private List<HierarchyViewModel> _linearResourceList;
 
-        public List<ResourceViewModel> LinearResourceList
+        public List<HierarchyViewModel> LinearResourceList
         {
             get
             {
-                _linearResourceList = new List<ResourceViewModel>();
+                _linearResourceList = new List<HierarchyViewModel>();
 
-                foreach (ResourceViewModel rootNode in RootNodes)
+                foreach (HierarchyViewModel rootNode in RootNodes)
                 {
                     _linearResourceList.Add(rootNode);
                     InitilizeLinearResourceListRecursively(rootNode.Children);
@@ -182,11 +153,11 @@ namespace MDD4All.SpecIF.ViewModels
 
 
 
-        private void InitilizeLinearResourceListRecursively(ObservableCollection<ResourceViewModel> children)
+        private void InitilizeLinearResourceListRecursively(ObservableCollection<HierarchyViewModel> children)
         {
-            foreach (ResourceViewModel child in children)
+            foreach (HierarchyViewModel child in children)
             {
-                child.HierarchyID = HierarchyId;
+                child.HierarchyKey = HierarchyKey;
                 _linearResourceList.Add(child);
 
                 if (child.Children != null)
@@ -198,7 +169,7 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        public ObservableCollection<ResourceViewModel> RootNodes { get; set; }
+        public ObservableCollection<HierarchyViewModel> RootNodes { get; set; }
 
         private Node _hierarchyNode;
 
@@ -210,28 +181,141 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private Resource _hierarchy;
+        //private Resource _hierarchy;
 
-        public Resource Hierarchy
-        {
-            get
-            {
-                return _hierarchy;
-            }
-        }
+        //public Resource Hierarchy
+        //{
+        //    get
+        //    {
+        //        return _hierarchy;
+        //    }
+        //}
 
         public string Title
         {
             get
             {
                 string result = "";
-                if (_hierarchy != null)
+                if (ReferencedResource != null)
                 {
-                    result = _hierarchy.GetTypeName(_metadataReader);
+                    result = ReferencedResource.Resource.GetTypeName(_metadataReader);
                 }
                 return result;
             }
         }
+
+        private int _index = 0;
+
+        public int Index
+        {
+            get
+            {
+                return _index;
+            }
+
+            set
+            {
+                _index = value;
+            }
+        }
+
+        public string Level
+        {
+            get
+            {
+                string result = "";
+
+                result = "" + (Index + 1);
+
+                HierarchyViewModel item = this;
+
+                while (item.Parent != null)
+                {
+                    result = (item.Parent.Index + 1) + "." + result;
+                    item = item.Parent;
+                }
+
+                return result;
+            }
+        }
+
+        private HierarchyViewModel _parent = null;
+
+        public HierarchyViewModel Parent
+        {
+            get
+            {
+                return _parent;
+            }
+
+            set
+            {
+                _parent = value;
+            }
+        }
+
+        private Node _node;
+
+        public Node Node
+        {
+            get { return _node; }
+        }
+
+        private string _nodeID = "";
+
+        public string NodeID
+        {
+            get
+            {
+                string result = "";
+                if (_node != null)
+                {
+                    result = _node.ID;
+                }
+                else
+                {
+                    result = _nodeID;
+                }
+                return result;
+            }
+
+            set
+            {
+                _nodeID = value;
+            }
+        }
+
+        public int Depth { get; set; }
+
+        public ObservableCollection<HierarchyViewModel> Children
+        {
+            get
+            {
+                ObservableCollection<HierarchyViewModel> result = new ObservableCollection<HierarchyViewModel>();
+
+                int counter = 0;
+                if (_node.Nodes != null)
+                {
+                    foreach (Node child in _node.Nodes)
+                    {
+                        HierarchyViewModel resourceViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
+
+                        resourceViewModel.Parent = this;
+                        resourceViewModel.Index = counter;
+                        resourceViewModel.Depth = Depth + 1;
+                        counter++;
+
+                        result.Add(resourceViewModel);
+                    }
+                }
+
+                return result;
+            }
+        }
+
+        public bool IsSelected { get; set; } = false;
+
+        public bool IsExpanded { get; set; } = false;
 
         private static List<ResourceClass> _resourceTypes = null;
 
@@ -260,57 +344,16 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        private BootstrapTreeNode _bootstrapTreeDataModel;
+        //private BootstrapTreeNode _bootstrapTreeDataModel;
 
-        public BootstrapTreeNode BootstrapTreeDataModel
-        {
-            get
-            {
-                return _bootstrapTreeDataModel;
-            }
-        }
+        //public BootstrapTreeNode BootstrapTreeDataModel
+        //{
+        //    get
+        //    {
+        //        return _bootstrapTreeDataModel;
+        //    }
+        //}
 
-
-
-
-        public List<JsTreeNode> JsTreeDataModel
-        {
-
-            get
-            {
-                List<JsTreeNode> result = new List<JsTreeNode>();
-
-                foreach (ResourceViewModel rootNode in RootNodes)
-                {
-                    result.Add(new JsTreeNode()
-                    {
-                        Parent = "#",
-                        ID = rootNode.NodeID,
-                        Text = rootNode.Level + " " + rootNode.LongTitle
-                    });
-                    InitalizeJsTreeDataRecursively(rootNode, result);
-                }
-
-                return result;
-            }
-        }
-
-        private void InitalizeJsTreeDataRecursively(ResourceViewModel parentResource, List<JsTreeNode> result)
-        {
-            foreach (ResourceViewModel child in parentResource.Children)
-            {
-                JsTreeNode childNode = new JsTreeNode()
-                {
-                    Parent = parentResource.NodeID,
-                    ID = child.NodeID,
-                    Text = child.Level + " " + child.LongTitle
-                };
-
-                result.Add(childNode);
-
-                InitalizeJsTreeDataRecursively(child, result);
-            }
-        }
 
         #region COMMAND_IMPLEMENTATIONS
 

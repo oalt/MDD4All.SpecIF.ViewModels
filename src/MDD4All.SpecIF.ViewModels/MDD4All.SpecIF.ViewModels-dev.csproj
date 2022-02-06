@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>MDD4All.SpecIF.ViewModels</AssemblyName>
+    <RootNamespace>MDD4All.SpecIF.ViewModels</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
