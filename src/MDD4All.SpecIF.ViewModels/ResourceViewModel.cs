@@ -193,7 +193,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (string.IsNullOrEmpty(result) && _resource != null && _resource.GetTypeName(_metadataReader) != null)
                 {
-                    result = _resource.GetTypeName(_metadataReader);
+                    result = "[" + _resource.GetTypeName(_metadataReader) + "]";
                 }
 
                 return result;

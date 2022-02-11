@@ -13,6 +13,8 @@ namespace MDD4All.SpecIF.ViewModels
     public class HierarchyViewModel : ViewModelBase
     {
 
+        private bool _rootNodesInitialized = false;
+
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
                                   ISpecIfDataReader dataReader,
                                   ISpecIfDataWriter dataWriter,
@@ -23,7 +25,9 @@ namespace MDD4All.SpecIF.ViewModels
             _specIfDataReader = dataReader;
 
             HierarchyKey = key;
-            InitializeData();
+
+            _hierarchyNode = _specIfDataReader.GetHierarchyByKey(key);
+            InitializeReferencedResource(_hierarchyNode.ResourceReference);
         }
 
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
@@ -37,17 +41,12 @@ namespace MDD4All.SpecIF.ViewModels
 
             _hierarchyNode = hierarchy;
             HierarchyKey = new Key(hierarchy.ID, hierarchy.Revision);
-            InitializeData();
+            InitializeReferencedResource(_hierarchyNode.ResourceReference);
         }
 
         private void InitializeData()
         {
-            RootNodes = new ObservableCollection<HierarchyViewModel>();
-
-            if (_hierarchyNode == null)
-            {
-                _hierarchyNode = _specIfDataReader.GetHierarchyByKey(new Key(HierarchyKey.ID, HierarchyKey.Revision));
-            }
+            _rootNodes = new ObservableCollection<HierarchyViewModel>();
 
             if (_hierarchyNode != null)
             {
@@ -70,15 +69,18 @@ namespace MDD4All.SpecIF.ViewModels
                     //InitializeBootstrapTreeDataModel();
                 }
 
-                ReferencedResource = CachedViewModelFactory.GetResourceViewModel(_hierarchyNode.ResourceReference,
-                                                                                 MetadataReader,
-                                                                                 DataReader,
-                                                                                 DataWriter);
+                
                 //_hierarchy = _specIfDataReader.GetResourceByKey(_hierarchyNode.ResourceReference);
             }
         }
 
-
+        private void InitializeReferencedResource(Key key)
+        {
+            ReferencedResource = CachedViewModelFactory.GetResourceViewModel(_hierarchyNode.ResourceReference,
+                                                                             MetadataReader,
+                                                                             DataReader,
+                                                                             DataWriter);
+        }
 
         private ISpecIfMetadataReader _metadataReader;
 
@@ -169,7 +171,19 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        public ObservableCollection<HierarchyViewModel> RootNodes { get; set; }
+        private ObservableCollection<HierarchyViewModel> _rootNodes { get; set; }
+
+        public ObservableCollection<HierarchyViewModel> RootNodes { 
+            get
+            {
+                if(!_rootNodesInitialized)
+                {
+                    InitializeData();
+                    _rootNodesInitialized = true;
+                }
+                return _rootNodes;
+            }
+        }
 
         private Node _hierarchyNode;
 
@@ -198,7 +212,20 @@ namespace MDD4All.SpecIF.ViewModels
                 string result = "";
                 if (ReferencedResource != null)
                 {
-                    result = ReferencedResource.Resource.GetTypeName(_metadataReader);
+                    result = ReferencedResource.Title;
+                }
+                return result;
+            }
+        }
+
+        public string ClassTitle
+        {
+            get
+            {
+                string result = "";
+                if (ReferencedResource != null)
+                {
+                    result = ReferencedResource.Type;
                 }
                 return result;
             }
