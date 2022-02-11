@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
 using MDD4All.SpecIF.DataModels.Helpers;
+using Newtonsoft.Json;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -47,7 +48,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
                                  ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, 
+                                 ISpecIfDataWriter dataWriter,
                                  string resourceId) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = _specIfDataReader.GetResourceByKey(
@@ -57,8 +58,8 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
                                  ISpecIfDataReader dataReader,
-                                 ISpecIfDataWriter dataWriter, 
-                                 string resourceId, 
+                                 ISpecIfDataWriter dataWriter,
+                                 string resourceId,
                                  string revision) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = _specIfDataReader.GetResourceByKey(
@@ -142,7 +143,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        
+
         public string Type
         {
             get
@@ -205,11 +206,15 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "";
 
-                List<Value> creator = Resource.GetPropertyValue(new Key("PC-creator", "1"));
+                //List<Value> creator = Resource.GetPropertyValue(new Key("PC-Creator", "1"));
 
-                if(creator.Count > 0)
+
+                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:creator")?.GetStringValue(_metadataReader);
+
+
+                if (string.IsNullOrEmpty(result))
                 {
-                    result = creator[0].StringValue;
+                    ;
                 }
 
                 return result;
@@ -404,13 +409,13 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (Resource != null && Resource.Properties != null)
                 {
-                    foreach(PropertyClass propertyClass in PropertyClasses)
+                    foreach (PropertyClass propertyClass in PropertyClasses)
                     {
                         Property property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
-                        
+
                         string propertyValue = "";
 
-                        if(property!= null)
+                        if (property != null)
                         {
                             propertyValue = property.GetStringValue(_metadataReader);
                         }
@@ -421,9 +426,9 @@ namespace MDD4All.SpecIF.ViewModels
 
                         PropertyViewModel propertyViewModel = new PropertyViewModel(MetadataReader, property)
                         {
-                            
+
                             Value = propertyValue
-                            
+
                         };
 
                         result.Add(propertyViewModel);
@@ -520,6 +525,20 @@ namespace MDD4All.SpecIF.ViewModels
 
                 }
 
+                return result;
+            }
+        }
+
+        public string FormattedJson
+        {
+            get
+            {
+                string result = "";
+
+                if (Resource != null)
+                {
+                    result = JsonConvert.SerializeObject(Resource, Formatting.Indented);
+                }
                 return result;
             }
         }

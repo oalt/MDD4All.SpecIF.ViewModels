@@ -39,6 +39,27 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public bool HasMultipleValues
+        {
+            get
+            {
+                bool result = false;
+
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+
+                if (propertyClass != null)
+                {
+                    if(propertyClass.Multiple.HasValue)
+                    {
+                        result = propertyClass.Multiple.Value;
+                    }
+                    
+                }
+
+                return result;
+            }
+        }
+
         public string Value
         {
             get
@@ -75,6 +96,42 @@ namespace MDD4All.SpecIF.ViewModels
                         Property.Values.Add(new Value(value));
                     }
                 }
+            }
+        }
+
+        public List<string> Values
+        {
+            get
+            {
+                List<string> result = new List<string>();
+
+                result = Property.GetStringValues(_specIfMetadataReader);
+
+                return result;
+            }
+        }
+
+        public List<string> EnumerationValues
+        {
+            get
+            {
+                return Property.GetEnumerationValues(_specIfMetadataReader);
+            }
+        }
+
+        public string EnumerationValue
+        {
+            get
+            {
+                string result = "";
+                
+                List<string> enumerationValues = Property.GetEnumerationValues(_specIfMetadataReader);
+                if (enumerationValues.Count > 0)
+                {
+                    result = enumerationValues[0];
+                }
+                
+                return result;
             }
         }
 
