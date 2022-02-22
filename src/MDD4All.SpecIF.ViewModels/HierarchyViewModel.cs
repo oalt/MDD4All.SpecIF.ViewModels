@@ -27,6 +27,7 @@ namespace MDD4All.SpecIF.ViewModels
             HierarchyKey = key;
 
             _hierarchyNode = _specIfDataReader.GetHierarchyByKey(key);
+            _rootNodes.Add(this);
             InitializeReferencedResource(_hierarchyNode.ResourceReference);
         }
 
@@ -40,13 +41,14 @@ namespace MDD4All.SpecIF.ViewModels
             _specIfDataReader = dataReader;
 
             _hierarchyNode = hierarchy;
+            _rootNodes.Add(this);
             HierarchyKey = new Key(hierarchy.ID, hierarchy.Revision);
             InitializeReferencedResource(_hierarchyNode.ResourceReference);
         }
 
         private void InitializeData()
         {
-            _rootNodes = new ObservableCollection<HierarchyViewModel>();
+            //_rootNodes = new ObservableCollection<HierarchyViewModel>();
 
             if (_hierarchyNode != null)
             {
@@ -61,7 +63,7 @@ namespace MDD4All.SpecIF.ViewModels
                         hierarchyViewModel.Index = counter;
                         hierarchyViewModel.Depth = 1;
                         hierarchyViewModel.HierarchyKey = HierarchyKey;
-                        RootNodes.Add(hierarchyViewModel);
+                        hierarchyViewModel.Parent = this;
 
                         counter++;
                     }
@@ -171,7 +173,7 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        private ObservableCollection<HierarchyViewModel> _rootNodes { get; set; }
+        private ObservableCollection<HierarchyViewModel> _rootNodes = new ObservableCollection<HierarchyViewModel>();
 
         public ObservableCollection<HierarchyViewModel> RootNodes { 
             get
@@ -194,16 +196,6 @@ namespace MDD4All.SpecIF.ViewModels
                 return _hierarchyNode;
             }
         }
-
-        //private Resource _hierarchy;
-
-        //public Resource Hierarchy
-        //{
-        //    get
-        //    {
-        //        return _hierarchy;
-        //    }
-        //}
 
         public string Title
         {
@@ -281,13 +273,6 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private Node _node;
-
-        public Node Node
-        {
-            get { return _node; }
-        }
-
         private string _nodeID = "";
 
         public string NodeID
@@ -295,9 +280,9 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-                if (_node != null)
+                if (_hierarchyNode != null)
                 {
-                    result = _node.ID;
+                    result = _hierarchyNode.ID;
                 }
                 else
                 {
@@ -321,9 +306,9 @@ namespace MDD4All.SpecIF.ViewModels
                 ObservableCollection<HierarchyViewModel> result = new ObservableCollection<HierarchyViewModel>();
 
                 int counter = 0;
-                if (_node.Nodes != null)
+                if (_hierarchyNode.Nodes != null)
                 {
-                    foreach (Node child in _node.Nodes)
+                    foreach (Node child in _hierarchyNode.Nodes)
                     {
                         HierarchyViewModel resourceViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
 

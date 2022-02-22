@@ -200,6 +200,21 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string Description
+        {
+            get
+            {
+                string result = "";
+
+                if (_resource != null && _resource.Properties != null)
+                {
+                    result = Resource.GetPropertyValue("dcterms:description", _metadataReader);
+                }
+
+                return result;
+            }
+        }
+
         public string Creator
         {
             get
