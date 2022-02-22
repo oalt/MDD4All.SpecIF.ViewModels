@@ -111,7 +111,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public List<string> EnumerationValues
+        public List<List<string>> EnumerationValues
         {
             get
             {
@@ -125,10 +125,10 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "";
                 
-                List<string> enumerationValues = Property.GetEnumerationValues(_specIfMetadataReader);
+                List<List<string>> enumerationValues = Property.GetEnumerationValues(_specIfMetadataReader);
                 if (enumerationValues.Count > 0)
                 {
-                    result = enumerationValues[0];
+                    result = enumerationValues[0][0];
                 }
                 
                 return result;
@@ -246,6 +246,23 @@ namespace MDD4All.SpecIF.ViewModels
                 if(dataType != null && dataType.Enumeration != null && dataType.Enumeration.Count > 0)
                 {
                     result = true;
+                }
+
+                return result;
+            }
+        }
+
+        public bool IsMultipleEnumeration
+        {
+            get
+            {
+                bool result = false;
+
+                DataType dataType = DataType;
+
+                if (dataType != null && dataType.Multiple.HasValue)
+                {
+                    result = dataType.Multiple.Value;
                 }
 
                 return result;
