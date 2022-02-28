@@ -236,6 +236,18 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string Identifier
+        {
+            get
+            {
+                string result = "";
+
+                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:identifier")?.GetStringValue(_metadataReader);
+
+                return result;
+            }
+        }
+
         public string ClassifierName
         {
             get
