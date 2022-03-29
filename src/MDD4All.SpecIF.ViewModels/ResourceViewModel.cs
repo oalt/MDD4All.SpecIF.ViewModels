@@ -440,23 +440,19 @@ namespace MDD4All.SpecIF.ViewModels
                     {
                         Property property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
 
-                        string propertyValue = "";
+                        PropertyViewModel propertyViewModel;
 
-                        if (property != null)
+                        if (property == null)
                         {
-                            propertyValue = property.GetStringValue(_metadataReader);
+                            propertyViewModel = new PropertyViewModel(MetadataReader, new Key(propertyClass.ID, 
+                                                                                              propertyClass.Revision));
                         }
                         else
                         {
-                            property = new Property(new Key(propertyClass.ID, propertyClass.Revision), "");
+                            propertyViewModel = new PropertyViewModel(MetadataReader, property);
                         }
 
-                        PropertyViewModel propertyViewModel = new PropertyViewModel(MetadataReader, property)
-                        {
-
-                            Value = propertyValue
-
-                        };
+                         
 
                         result.Add(propertyViewModel);
                     }

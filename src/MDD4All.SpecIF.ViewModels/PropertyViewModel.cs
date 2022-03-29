@@ -3,6 +3,7 @@ using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using MDD4All.SpecIF.ViewModels.Models;
+using System;
 using System.Collections.Generic;
 
 namespace MDD4All.SpecIF.ViewModels
@@ -18,6 +19,16 @@ namespace MDD4All.SpecIF.ViewModels
             Property = property;
 
             InitailizeEnumerationOptions();
+        }
+
+        public PropertyViewModel(ISpecIfMetadataReader specIfMetadataReader,
+                                 Key propertyClass)
+        {
+            _specIfMetadataReader = specIfMetadataReader;
+
+            Property = new Property(new Key(propertyClass.ID, propertyClass.Revision), "");
+
+            Property.Values = new List<Value>();
         }
 
         public Property Property { get; set; }
@@ -111,6 +122,25 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string DurationValue
+        {
+            get
+            {
+                string result = "";
+
+                TimeSpan timeSpan = Value.ToTimeSpan();
+
+                if(timeSpan != null)
+                {
+                    result = timeSpan.ToString();
+                }
+
+
+                return result;
+            }
+        }
+
+
         public List<List<string>> EnumerationValues
         {
             get
@@ -193,43 +223,43 @@ namespace MDD4All.SpecIF.ViewModels
 
                 string defaultFormat = "plain";
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                //PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
 
-                if (propertyClass != null)
-                {
-                    if (!string.IsNullOrEmpty(propertyClass.Format))
-                    {
-                        defaultFormat = propertyClass.Format;
-                    }
+                //if (propertyClass != null)
+                //{
+                //    if (!string.IsNullOrEmpty(propertyClass.Format))
+                //    {
+                //        defaultFormat = propertyClass.Format;
+                //    }
 
-                    if (Property.Values.Count > 0)
-                    {
-                        if (Property.Values[0].IsStringValue)
-                        {
-                            result = defaultFormat;
-                        }
-                        else
-                        {
-                            Value firstValue = Property.Values[0];
+                //    if (Property.Values.Count > 0)
+                //    {
+                //        if (Property.Values[0].IsStringValue)
+                //        {
+                //            result = defaultFormat;
+                //        }
+                //        else
+                //        {
+                //            Value firstValue = Property.Values[0];
 
-                            string format = firstValue.MultilanguageText[0].Format;
+                //            string format = firstValue.MultilanguageTexts[0].Format;
 
-                            if (!string.IsNullOrEmpty(format))
-                            {
-                                result = format;
-                            }
-                            else
-                            {
-                                result = defaultFormat;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        result = defaultFormat;
-                    }
+                //            if (!string.IsNullOrEmpty(format))
+                //            {
+                //                result = format;
+                //            }
+                //            else
+                //            {
+                //                result = defaultFormat;
+                //            }
+                //        }
+                //    }
+                //    else
+                //    {
+                //        result = defaultFormat;
+                //    }
 
-                }
+                //}
 
                 return result;
             }
