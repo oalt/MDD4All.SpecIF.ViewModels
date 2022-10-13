@@ -57,7 +57,7 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     foreach (Key nodeReference in _hierarchyNode.NodeReferences)
                     {
-                        Node childNode = _specIfDataReader.GetHierarchyByKey(nodeReference);
+                        Node childNode = _specIfDataReader.GetNodeByKey(nodeReference);
 
                         HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
                         hierarchyViewModel.Index = counter;
@@ -120,7 +120,19 @@ namespace MDD4All.SpecIF.ViewModels
             set { _editType = value; }
         }
 
+        public Key RootResourceClassKey
+        {
+            get
+            {
+                Key result = null;
+                if(ReferencedResource != null)
+                {
+                    result = ReferencedResource.Resource.Class;
+                }
 
+                return result;
+            }
+        }
 
         public Key HierarchyKey { get; set; }
 
@@ -186,6 +198,8 @@ namespace MDD4All.SpecIF.ViewModels
                 return _rootNodes;
             }
         }
+
+        public HierarchyViewModel SelectedNode { get; set; }
 
         private Node _hierarchyNode;
 
