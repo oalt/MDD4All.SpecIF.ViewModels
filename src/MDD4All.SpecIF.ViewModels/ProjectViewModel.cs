@@ -56,7 +56,7 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get 
             {
-                string result = _projectDescriptor.Title.GetStringValue();
+                string result = _projectDescriptor.Title.GetDefaultStringValue();
                 if(string.IsNullOrEmpty(result))
                 {
                     result = "<UNTITELED PROJECT>";
