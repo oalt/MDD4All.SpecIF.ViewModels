@@ -7,10 +7,11 @@ using MDD4All.SpecIF.DataModels.Manipulation;
 using System.Collections.ObjectModel;
 using System;
 using MDD4All.SpecIF.ViewModels.Cache;
+using MDD4All.UI.DataModels.Tree;
 
 namespace MDD4All.SpecIF.ViewModels
 {
-    public class HierarchyViewModel : ViewModelBase
+    public class HierarchyViewModel : ViewModelBase, ITreeNode
     {
 
         private bool _rootNodesInitialized = false;
@@ -33,7 +34,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
                                   ISpecIfDataReader dataReader,
-                                  ISpecIfDataWriter dataWriter, 
+                                  ISpecIfDataWriter dataWriter,
                                   Node hierarchy)
         {
             _metadataReader = metadataReader;
@@ -71,7 +72,7 @@ namespace MDD4All.SpecIF.ViewModels
                     //InitializeBootstrapTreeDataModel();
                 }
 
-                
+
                 //_hierarchy = _specIfDataReader.GetResourceByKey(_hierarchyNode.ResourceReference);
             }
         }
@@ -125,7 +126,7 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 Key result = null;
-                if(ReferencedResource != null)
+                if (ReferencedResource != null)
                 {
                     result = ReferencedResource.Resource.Class;
                 }
@@ -169,7 +170,7 @@ namespace MDD4All.SpecIF.ViewModels
 
 
 
-        private void InitilizeLinearResourceListRecursively(ObservableCollection<HierarchyViewModel> children)
+        private void InitilizeLinearResourceListRecursively(ObservableCollection<ITreeNode> children)
         {
             foreach (HierarchyViewModel child in children)
             {
@@ -187,10 +188,11 @@ namespace MDD4All.SpecIF.ViewModels
 
         private ObservableCollection<HierarchyViewModel> _rootNodes = new ObservableCollection<HierarchyViewModel>();
 
-        public ObservableCollection<HierarchyViewModel> RootNodes { 
+        public ObservableCollection<HierarchyViewModel> RootNodes
+        {
             get
             {
-                if(!_rootNodesInitialized)
+                if (!_rootNodesInitialized)
                 {
                     InitializeData();
                     _rootNodesInitialized = true;
@@ -199,7 +201,52 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public HierarchyViewModel SelectedNode { get; set; }
+        private ITreeNode _selectedNode = null;
+
+        public ITreeNode SelectedNode 
+        { 
+            get
+            {
+                // get the value always from the root node
+                ITreeNode result = null;
+                if(Parent == null)
+                {
+                    result = _selectedNode;
+                }
+                else
+                {
+                    ITreeNode node = this;
+                    while(node.Parent != null)
+                    {
+                        node = node.Parent;
+
+                    }
+                    result = node.SelectedNode;
+                }
+
+                return result;
+            }
+            
+            
+            set
+            {
+                if (Parent == null)
+                {
+                    _selectedNode = value;
+                }
+                else
+                {
+                    ITreeNode node = this;
+                    while (node.Parent != null)
+                    {
+                        node = node.Parent;
+
+                    }
+                    node.SelectedNode = value;
+                }
+            }
+        
+        }
 
         private Node _hierarchyNode;
 
@@ -260,7 +307,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 result = "" + (Index + 1);
 
-                HierarchyViewModel item = this;
+                ITreeNode item = this;
 
                 while (item.Parent != null)
                 {
@@ -272,9 +319,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private HierarchyViewModel _parent = null;
+        private ITreeNode _parent = null;
 
-        public HierarchyViewModel Parent
+        public ITreeNode Parent
         {
             get
             {
@@ -313,15 +360,20 @@ namespace MDD4All.SpecIF.ViewModels
 
         public int Depth { get; set; }
 
-        public ObservableCollection<HierarchyViewModel> Children
+        private ObservableCollection<ITreeNode> _children = null;
+
+        public ObservableCollection<ITreeNode> Children
         {
             get
             {
-                ObservableCollection<HierarchyViewModel> result = new ObservableCollection<HierarchyViewModel>();
+                ObservableCollection<ITreeNode> result = null;
 
-                int counter = 0;
-                if (_hierarchyNode.Nodes != null)
+                if (_children == null && _hierarchyNode.Nodes != null)
                 {
+                    _children = new ObservableCollection<ITreeNode>();
+                    int counter = 0;
+
+
                     foreach (Node child in _hierarchyNode.Nodes)
                     {
                         HierarchyViewModel resourceViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
@@ -331,9 +383,12 @@ namespace MDD4All.SpecIF.ViewModels
                         resourceViewModel.Depth = Depth + 1;
                         counter++;
 
-                        result.Add(resourceViewModel);
+                        _children.Add(resourceViewModel);
                     }
+
                 }
+
+                result = _children;
 
                 return result;
             }
@@ -355,6 +410,37 @@ namespace MDD4All.SpecIF.ViewModels
                 }
                 return _resourceTypes;
             }
+        }
+
+        public bool HasChildNodes
+        {
+            get
+            {
+                return Children?.Any() ?? false;
+            }
+        }
+
+        public bool IsLoading
+        {
+            get
+            {
+                bool result = ReferencedResource == null;
+                return result;
+            }
+
+        }
+
+
+        public bool IsDisabled
+        {
+            get
+            {
+                return false;
+
+            }
+
+            set
+            { }
         }
 
         public bool CanDelete(string nodeID)
@@ -379,6 +465,21 @@ namespace MDD4All.SpecIF.ViewModels
         //        return _bootstrapTreeDataModel;
         //    }
         //}
+
+        private ITreeNode RootNode
+        {
+            get
+            {
+                ITreeNode result = this;
+
+                while (result.Parent != null)
+                {
+                    result = result.Parent;
+                }
+
+                return result;
+            }
+        }
 
 
         #region COMMAND_IMPLEMENTATIONS
