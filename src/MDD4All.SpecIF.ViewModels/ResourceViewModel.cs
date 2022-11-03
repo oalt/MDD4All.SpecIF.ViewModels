@@ -23,7 +23,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             _node = null;
 
-            InitializeCommands();
+            
         }
 
 
@@ -68,13 +68,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         }
 
-        private void InitializeCommands()
-        {
-            SaveResourceAsNewRevisionCommand = new RelayCommand<Key>(ExecuteSaveResourceAsNewRevision);
-
-            AddNewResourceAboveCommand = new RelayCommand<Key>(ExecuteAddNewResourceAbove);
-            AddNewResourceAsChildCommand = new RelayCommand<Key>(ExecuteAddResourceAsChild);
-        }
+        
 
 
 
@@ -702,183 +696,6 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        #region COMMAND_DEFINITIONS
-
-        public ICommand SaveResourceAsNewRevisionCommand { get; private set; }
-
-        public ICommand AddNewResourceAboveCommand { get; private set; }
-
-        public ICommand AddNewResourceAsChildCommand { get; private set; }
-
-        public ICommand AddNewResourceBelowCommand { get; private set; }
-
-        public ICommand DeleteResourceCommand { get; private set; }
-
-        #endregion
-
-        #region COMMAND_IMPLEMENTATIONS
-
-        private void ExecuteSaveResourceAsNewRevision(Key nodeKey)
-        {
-
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Resource.ID = nodeToEdit.ResourceReference.ID;
-
-            //Revision latestRevision = _specIfDataReader.GetLatestResourceRevision(Resource.ID);
-
-            //Revision newRevision = new Revision();
-
-            ////Revision.BranchName = latestRevision.BranchName;
-            //Revision.RevsionNumber = latestRevision.RevsionNumber + 1;
-
-            //_specIfDataWriter.AddResource(Resource);
-
-            //nodeToEdit.ResourceReference.Revision = Revision;
-
-            //_specIfDataWriter.UpdateNode(nodeToEdit);
-        }
-
-        private void ExecuteAddNewResourceAbove(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //if (Parent == null)
-            //{
-            //	hierarchyViewModel.HierarchyNode.Nodes.Insert(Index, newNode);
-
-            //	_specIfDataWriter.UpdateHierarchy(hierarchyViewModel.HierarchyNode);
-            //}
-            //else
-            //{
-            //	Node parentNode = Parent.Node;
-
-            //	parentNode.Nodes.Insert(Index, newNode);
-
-            //	_specIfDataWriter.UpdateNode(Parent.Node);
-            //}
-
-        }
-
-        private void ExecuteAddResourceAsChild(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //if (nodeToEdit.Nodes == null)
-            //{
-            //	nodeToEdit.Nodes = new List<Node>();
-
-            //	nodeToEdit.Nodes.Add(newNode);
-            //}
-            //else
-            //{
-            //	nodeToEdit.Nodes.Insert(0, newNode);
-            //}
-
-            //_specIfDataWriter.UpdateNode(nodeToEdit);
-
-        }
-
-        private void ExecuteAddResourceBelow(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //ResourceViewModel parentViewModel = Parent;
-
-            //if (parentViewModel == null)
-            //{
-            //	if (Index + 1 == hierarchyViewModel.HierarchyNode.Nodes.Count)
-            //	{
-            //		hierarchyViewModel.HierarchyNode.Nodes.Add(newNode);
-            //	}
-            //	else
-            //	{
-            //		hierarchyViewModel.HierarchyNode.Nodes.Insert(Index + 1, newNode);
-            //	}
-
-            //	_specIfDataWriter.UpdateHierarchy(hierarchyViewModel.HierarchyNode);
-            //}
-            //else
-            //{
-            //	Node parentNode = parentViewModel.Node;
-
-            //	if (Index + 1 == parentNode.Nodes.Count)
-            //	{
-            //		parentNode.Nodes.Add(newNode);
-            //	}
-            //	else
-            //	{
-            //		parentNode.Nodes.Insert(Index + 1, newNode);
-            //	}
-
-            //	_specIfDataWriter.UpdateNode(parentNode);
-            //}
-
-        }
-
-        private Node CreateNewNodeForAddition()
-        {
-            Node result = new Node()
-            {
-                ID = SpecIfGuidGenerator.CreateNewSpecIfGUID(),
-                Revision = SpecIfGuidGenerator.CreateNewRevsionGUID(),
-                ChangedAt = DateTime.Now,
-                ResourceReference = new Key()
-                {
-                    ID = Resource.ID,
-                    Revision = SpecIfGuidGenerator.CreateNewRevsionGUID()
-                }
-
-            };
-
-            return result;
-        }
-
-        private void ExecuteDeleteResource()
-        {
-
-        }
-
-        #endregion
 
     }
 
