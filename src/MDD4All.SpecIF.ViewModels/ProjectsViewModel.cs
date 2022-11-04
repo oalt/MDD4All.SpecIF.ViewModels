@@ -29,6 +29,8 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void InitializeProjects()
         {
+            Projects = new List<ProjectViewModel>();
+
             List<ProjectDescriptor> projectDescriptors = _dataReader.GetProjectDescriptions();
 
             foreach(ProjectDescriptor projectDescriptor in projectDescriptors)
@@ -69,6 +71,7 @@ namespace MDD4All.SpecIF.ViewModels
                                                                            _dataWriter,
                                                                            new Key(rootNode.ID, rootNode.Revision));
 
+            InitializeProjects();
             //Hierarchies.Add(hierarchyViewModel);
         }
     }

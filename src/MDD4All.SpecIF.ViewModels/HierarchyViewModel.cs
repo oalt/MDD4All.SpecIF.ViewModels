@@ -5,12 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using System.Collections.ObjectModel;
-using System;
 using MDD4All.SpecIF.ViewModels.Cache;
 using MDD4All.UI.DataModels.Tree;
-using MDD4All.SpecIF.DataModels.Helpers;
-using System.Windows.Input;
-using GalaSoft.MvvmLight.Command;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -28,13 +24,9 @@ namespace MDD4All.SpecIF.ViewModels
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
 
-            HierarchyKey = key;
-
             _hierarchyNode = _specIfDataReader.GetHierarchyByKey(key);
             _rootNodes.Add(this);
             InitializeReferencedResource(_hierarchyNode.ResourceReference);
-
-            InitializeCommands();
         }
 
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
@@ -48,24 +40,15 @@ namespace MDD4All.SpecIF.ViewModels
 
             _hierarchyNode = hierarchy;
             _rootNodes.Add(this);
-            HierarchyKey = new Key(hierarchy.ID, hierarchy.Revision);
+
             InitializeReferencedResource(_hierarchyNode.ResourceReference);
-
-            InitializeCommands();
         }
 
-        private void InitializeCommands()
-        {
-            EditResourceCommand = new RelayCommand(ExecuteEditResource);
 
-            AddNewResourceAboveCommand = new RelayCommand<Key>(ExecuteAddNewResourceAbove);
-            AddNewResourceAsChildCommand = new RelayCommand<Key>(ExecuteAddResourceAsChild);
-        }
 
 
         private void InitializeData()
         {
-            //_rootNodes = new ObservableCollection<HierarchyViewModel>();
 
             if (_hierarchyNode != null)
             {
@@ -79,17 +62,14 @@ namespace MDD4All.SpecIF.ViewModels
                         HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
                         hierarchyViewModel.Index = counter;
                         hierarchyViewModel.Depth = 1;
-                        hierarchyViewModel.HierarchyKey = HierarchyKey;
                         hierarchyViewModel.Parent = this;
 
                         counter++;
                     }
 
-                    //InitializeBootstrapTreeDataModel();
+
                 }
 
-
-                //_hierarchy = _specIfDataReader.GetResourceByKey(_hierarchyNode.ResourceReference);
             }
         }
 
@@ -151,7 +131,20 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public Key HierarchyKey { get; set; }
+        public Key HierarchyKey
+        {
+            get
+            {
+                Key result = null;
+
+                if (HierarchyNode != null)
+                {
+                    result = new Key(HierarchyNode.ID, HierarchyNode.Revision);
+                }
+
+                return result;
+            }
+        }
 
         public ResourceViewModel ReferencedResource { get; set; }
 
@@ -190,7 +183,7 @@ namespace MDD4All.SpecIF.ViewModels
         {
             foreach (HierarchyViewModel child in children)
             {
-                child.HierarchyKey = HierarchyKey;
+                //child.HierarchyKey = HierarchyKey;
                 _linearResourceList.Add(child);
 
                 if (child.Children != null)
@@ -217,17 +210,16 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private ITreeNode _selectedNode = null;
+        private HierarchyEditorViewModel _editorViewModel;
 
-        public ITreeNode SelectedNode
+        public HierarchyEditorViewModel EditorViewModel
         {
             get
             {
-                // get the value always from the root node
-                ITreeNode result = null;
+                HierarchyEditorViewModel result = null;
                 if (Parent == null)
                 {
-                    result = _selectedNode;
+                    result = _editorViewModel;
                 }
                 else
                 {
@@ -235,33 +227,16 @@ namespace MDD4All.SpecIF.ViewModels
                     while (node.Parent != null)
                     {
                         node = node.Parent;
-
                     }
-                    result = node.SelectedNode;
-                }
+                    result = (node as HierarchyViewModel).EditorViewModel;
 
+                }
                 return result;
             }
 
-
             set
             {
-                if (Parent == null)
-                {
-                    _selectedNode = value;
-                }
-                else
-                {
-                    ITreeNode node = this;
-                    while (node.Parent != null)
-                    {
-                        node = node.Parent;
-
-                    }
-                    node.SelectedNode = value;
-
-                }
-                RaisePropertyChanged("SelectedNode");
+                _editorViewModel = value;
             }
 
         }
@@ -417,14 +392,17 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 bool result = false;
-                if (SelectedNode == this)
+                if (EditorViewModel.SelectedNode == this)
                 {
                     result = true;
                 }
                 return result;
             }
 
-            set { }
+            set
+            {
+                
+            }
         }
 
         public bool IsExpanded { get; set; } = false;
@@ -485,316 +463,5 @@ namespace MDD4All.SpecIF.ViewModels
 
             return result;
         }
-
-
-        //private BootstrapTreeNode _bootstrapTreeDataModel;
-
-        //public BootstrapTreeNode BootstrapTreeDataModel
-        //{
-        //    get
-        //    {
-        //        return _bootstrapTreeDataModel;
-        //    }
-        //}
-
-        private ITreeNode RootNode
-        {
-            get
-            {
-                ITreeNode result = this;
-
-                while (result.Parent != null)
-                {
-                    result = result.Parent;
-                }
-
-                return result;
-            }
-        }
-
-        private bool _editorActive = false;
-
-        public bool EditorActive 
-        {
-            get
-            {
-                // get the value always from the root node
-                bool result = false;
-                if (Parent == null)
-                {
-                    result = _editorActive;
-                }
-                else
-                {
-                    ITreeNode node = this;
-                    while (node.Parent != null)
-                    {
-                        node = node.Parent;
-
-                    }
-                    result = ((HierarchyViewModel)node).EditorActive;
-                }
-
-                return result;
-            }
-
-
-            set
-            {
-                if (Parent == null)
-                {
-                    _editorActive = value;
-                }
-                else
-                {
-                    ITreeNode node = this;
-                    while (node.Parent != null)
-                    {
-                        node = node.Parent;
-
-                    }
-                    ((HierarchyViewModel)node).EditorActive = value;
-
-                }
-                RaisePropertyChanged("EditorActive");
-            }
-        }
-
-        #region COMMAND_DEFINITIONS
-
-        public ICommand EditResourceCommand { get; private set; }
-
-        public ICommand AddNewResourceAboveCommand { get; private set; }
-
-        public ICommand AddNewResourceAsChildCommand { get; private set; }
-
-        public ICommand AddNewResourceBelowCommand { get; private set; }
-
-        public ICommand DeleteResourceCommand { get; private set; }
-
-        #endregion
-
-        #region COMMAND_IMPLEMENTATIONS
-
-        private void ExecuteEditResource()
-        {
-
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Resource.ID = nodeToEdit.ResourceReference.ID;
-
-            //Revision latestRevision = _specIfDataReader.GetLatestResourceRevision(Resource.ID);
-
-            //Revision newRevision = new Revision();
-
-            ////Revision.BranchName = latestRevision.BranchName;
-            //Revision.RevsionNumber = latestRevision.RevsionNumber + 1;
-
-            //_specIfDataWriter.AddResource(Resource);
-
-            //nodeToEdit.ResourceReference.Revision = Revision;
-
-            //_specIfDataWriter.UpdateNode(nodeToEdit);
-        }
-
-        private void ExecuteAddNewResourceAbove(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //if (Parent == null)
-            //{
-            //	hierarchyViewModel.HierarchyNode.Nodes.Insert(Index, newNode);
-
-            //	_specIfDataWriter.UpdateHierarchy(hierarchyViewModel.HierarchyNode);
-            //}
-            //else
-            //{
-            //	Node parentNode = Parent.Node;
-
-            //	parentNode.Nodes.Insert(Index, newNode);
-
-            //	_specIfDataWriter.UpdateNode(Parent.Node);
-            //}
-
-        }
-
-        private void ExecuteAddResourceAsChild(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //if (nodeToEdit.Nodes == null)
-            //{
-            //	nodeToEdit.Nodes = new List<Node>();
-
-            //	nodeToEdit.Nodes.Add(newNode);
-            //}
-            //else
-            //{
-            //	nodeToEdit.Nodes.Insert(0, newNode);
-            //}
-
-            //_specIfDataWriter.UpdateNode(nodeToEdit);
-
-        }
-
-        private void ExecuteAddResourceBelow(Key nodeKey)
-        {
-            //_specIfDataWriter.AddResource(Resource);
-
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //ResourceViewModel parentViewModel = Parent;
-
-            //if (parentViewModel == null)
-            //{
-            //	if (Index + 1 == hierarchyViewModel.HierarchyNode.Nodes.Count)
-            //	{
-            //		hierarchyViewModel.HierarchyNode.Nodes.Add(newNode);
-            //	}
-            //	else
-            //	{
-            //		hierarchyViewModel.HierarchyNode.Nodes.Insert(Index + 1, newNode);
-            //	}
-
-            //	_specIfDataWriter.UpdateHierarchy(hierarchyViewModel.HierarchyNode);
-            //}
-            //else
-            //{
-            //	Node parentNode = parentViewModel.Node;
-
-            //	if (Index + 1 == parentNode.Nodes.Count)
-            //	{
-            //		parentNode.Nodes.Add(newNode);
-            //	}
-            //	else
-            //	{
-            //		parentNode.Nodes.Insert(Index + 1, newNode);
-            //	}
-
-            //	_specIfDataWriter.UpdateNode(parentNode);
-            //}
-
-        }
-
-        private Node CreateNewNodeForAddition()
-        {
-            Node result = new Node()
-            {
-                ID = SpecIfGuidGenerator.CreateNewSpecIfGUID(),
-                Revision = SpecIfGuidGenerator.CreateNewRevsionGUID(),
-                ChangedAt = DateTime.Now,
-                ResourceReference = new Key()
-                {
-                    ID = ReferencedResource.Resource.ID,
-                    Revision = SpecIfGuidGenerator.CreateNewRevsionGUID()
-                }
-
-            };
-
-            return result;
-        }
-
-        private void ExecuteDeleteResource()
-        {
-
-        }
-
-        #endregion
-
-
-        //#region COMMAND_IMPLEMENTATIONS
-
-        //public void DeleteNode(string nodeID)
-        //{
-        //    if (CanDelete(nodeID) == false)
-        //    {
-
-        //    }
-        //    else
-        //    {
-        //        Node nodeToDelete = HierarchyNode.Nodes?.FirstOrDefault(n => n.ID == nodeID);
-
-        //        if (nodeToDelete != null)
-        //        {
-        //            HierarchyNode.Nodes.Remove(nodeToDelete);
-        //            _specIfDataWriter.UpdateHierarchy(HierarchyNode);
-        //        }
-        //        else
-        //        {
-
-        //            foreach (Node node in HierarchyNode.Nodes)
-        //            {
-        //                if (node != null)
-        //                {
-        //                    DeleteNodeRecursively(node, nodeID);
-        //                }
-        //            }
-        //        }
-        //    }
-        //}
-
-        //private void DeleteNodeRecursively(Node parent, string nodeID)
-        //{
-        //    throw new NotImplementedException();
-        //    //Node nodeToDelete = parent?.Nodes?.FirstOrDefault(n => n.ID == nodeID);
-
-        //    //if (nodeToDelete != null)
-        //    //{
-        //    //	parent.Nodes.Remove(nodeToDelete);
-        //    //	_specIfDataWriter.UpdateNode(parent);
-        //    //}
-        //    //else
-        //    //{
-        //    //	if (parent.Nodes != null)
-        //    //	{
-        //    //		foreach (Node child in parent.Nodes)
-        //    //		{
-        //    //			if (child != null)
-        //    //			{
-        //    //				DeleteNodeRecursively(child, nodeID);
-        //    //			}
-        //    //		}
-        //    //	}
-
-        //    //}
-        //}
-        //#endregion
     }
 }
