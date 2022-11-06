@@ -4,6 +4,10 @@ using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
+using MDD4All.SpecIF.DataFactory;
+using MDD4All.SpecIF.DataModels.Helpers;
+using System;
+using System.Collections.Generic;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -23,11 +27,13 @@ namespace MDD4All.SpecIF.ViewModels
             Node rootNode = _specIfDataReader.GetHierarchyByKey(key);
             RootNode = new HierarchyViewModel(metadataReader, dataReader, dataWriter, rootNode);
             RootNode.EditorViewModel = this;
+
+            RootNode.IsExpanded = true;
         }
 
         private void InitializeCommands()
         {
-            StartEditResourceCommand = new RelayCommand(ExecuteStartEditResource);
+            StartEditResourceCommand = new RelayCommand<string>(ExecuteStartEditResource);
             ConfirmEditResourceCommand = new RelayCommand(ExecuteConfirmEditResource);
             CancelEditResourceCommand = new RelayCommand(ExecuteCancelEditResource);
 
@@ -36,6 +42,11 @@ namespace MDD4All.SpecIF.ViewModels
 
 
         }
+
+        public const string EDIT_EXISTING = "Edit existing";
+        public const string NEW_CHILD = "New child";
+        public const string NEW_BELOW = "New resource below";
+        public const string NEW_ABOVE = "New resource above";
 
         private ISpecIfMetadataReader _metadataReader;
 
@@ -79,6 +90,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 _selectedNode = value;
                 RaisePropertyChanged("SelectedNode");
+                RaisePropertyChanged("StateChanged");
             }
         }
 
@@ -117,6 +129,44 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        private string _editType;
+
+        public string EditType
+        {
+            get { return _editType; }
+            set { _editType = value; }
+        }
+
+        public string EditDialogTitleKey
+        {
+            get
+            {
+                string result = "Title.EditResource";
+
+                switch (EditType)
+                {
+                    case EDIT_EXISTING:
+                        result = "Title.EditResource";
+                        break;
+
+                    case NEW_CHILD:
+                        result = "Title.NewResource";
+                        break;
+
+                    case NEW_BELOW:
+                        result = "Title.NewResource";
+                        break;
+
+                    case NEW_ABOVE:
+                        result = "Title.NewResource";
+                        break;
+                }
+
+                return result;
+            }
+        }
+
+
         public bool StateChanged
         {
             set
@@ -128,6 +178,14 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public Key SelectedResourceClassKey 
+        { 
+            get; 
+            
+            set; 
+        
+        }
+
         #region COMMAND_DEFINITIONS
 
         public ICommand StartEditResourceCommand { get; private set; }
@@ -135,6 +193,8 @@ namespace MDD4All.SpecIF.ViewModels
         public ICommand CancelEditResourceCommand { get; private set; }
 
         public ICommand ConfirmEditResourceCommand { get; private set; }
+
+        public ICommand StartCreateNewResourceCommand { get; private set; }
 
         public ICommand AddNewResourceAboveCommand { get; private set; }
 
@@ -148,32 +208,96 @@ namespace MDD4All.SpecIF.ViewModels
 
         #region COMMAND_IMPLEMENTATIONS
 
-        private void ExecuteStartEditResource()
+        private void ExecuteStartEditResource(string editType)
         {
-            HierarchyViewModel selectedElement = ((HierarchyViewModel)SelectedNode);
+            EditType = editType;
 
-            Resource clonedResource = selectedElement.ReferencedResource.Resource.CreateNewRevisionForEdit(_metadataReader);
-            ResourceUnderEdit = new ResourceViewModel(_metadataReader,
-                                                      _specIfDataReader,
-                                                      _specIfDataWriter,
-                                                      clonedResource);
-            ResourceUnderEdit.IsInEditMode = true;
+            if (editType == EDIT_EXISTING)
+            {
+                HierarchyViewModel selectedElement = ((HierarchyViewModel)SelectedNode);
 
-            EditorActive = true;
+                Resource clonedResource = selectedElement.ReferencedResource.Resource.CreateNewRevisionForEdit(_metadataReader);
+                ResourceUnderEdit = new ResourceViewModel(_metadataReader,
+                                                          _specIfDataReader,
+                                                          _specIfDataWriter,
+                                                          clonedResource);
+            }
+            else // create new resource
+            {
+                if (SelectedResourceClassKey != null)
+                {
+                    Resource newResource = SpecIfDataFactory.CreateResource(SelectedResourceClassKey, _metadataReader);
+                    ResourceUnderEdit = new ResourceViewModel(_metadataReader,
+                                                              _specIfDataReader,
+                                                              _specIfDataWriter,
+                                                              newResource);
+                }
 
+            }
+
+            if (ResourceUnderEdit != null)
+            {
+                ResourceUnderEdit.IsInEditMode = true;
+
+                EditorActive = true;
+            }
         }
 
         private void ExecuteConfirmEditResource()
         {
-            _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
+            if (EditType == EDIT_EXISTING)
+            {
+                _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
 
-            HierarchyViewModel selectedElement = ((HierarchyViewModel)SelectedNode);
+                HierarchyViewModel selectedElement = SelectedNode;
 
-            selectedElement.ReferencedResource = ResourceUnderEdit;
+                selectedElement.ReferencedResource = ResourceUnderEdit;
 
-            selectedElement.HierarchyNode.ResourceReference.Revision = ResourceUnderEdit.Resource.Revision;
+                selectedElement.HierarchyNode.ResourceReference.Revision = ResourceUnderEdit.Resource.Revision;
 
-            _specIfDataWriter.UpdateHierarchy(selectedElement.HierarchyNode);
+                _specIfDataWriter.UpdateHierarchy(selectedElement.HierarchyNode);
+            }
+            else if (EditType == NEW_CHILD)
+            {
+                _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
+
+                Node nodeToEdit = SelectedNode.HierarchyNode; 
+
+                Node newNode = CreateNewNodeForAddition();
+
+                HierarchyViewModel childViewModel = new HierarchyViewModel(_metadataReader,
+                                                                           _specIfDataReader,
+                                                                           _specIfDataWriter,
+                                                                           newNode);
+                childViewModel.Parent = SelectedNode;
+                childViewModel.EditorViewModel = this;
+
+                _specIfDataWriter.AddNodeAsFirstChild(nodeToEdit.ID, newNode);
+
+                if (nodeToEdit.Nodes == null)
+                {
+                    nodeToEdit.Nodes = new List<Node>();
+
+                    nodeToEdit.Nodes.Add(newNode);
+
+                    SelectedNode.Children.Add(childViewModel);
+                }
+                else
+                {
+                    nodeToEdit.Nodes.Insert(0, newNode);
+                    SelectedNode.Children.Insert(0, childViewModel);
+                }
+                SelectedNode.IsExpanded = true;
+
+            }
+            else if (EditType == NEW_BELOW)
+            {
+
+            }
+            else if (EditType == NEW_ABOVE)
+            {
+
+            }
 
             ResourceUnderEdit = null;
             EditorActive = false;
@@ -185,6 +309,11 @@ namespace MDD4All.SpecIF.ViewModels
         {
             ResourceUnderEdit = null;
             EditorActive = false;
+        }
+
+        private void ExecuteStartCreateNewResource()
+        {
+
         }
 
         private void ExecuteAddNewResourceAbove(Key nodeKey)
@@ -221,31 +350,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void ExecuteAddResourceAsChild(Key nodeKey)
         {
-            //_specIfDataWriter.AddResource(Resource);
 
-            //HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
-            //															   _specIfDataReader,
-            //															   _specIfDataWriter,
-            //															   nodeKey);
-
-            //Node nodeToEdit = hierarchyViewModel.HierarchyNode.GetNodeByKey(nodeKey);
-
-            //Node newNode = CreateNewNodeForAddition();
-
-            //_specIfDataWriter.AddNode(newNode);
-
-            //if (nodeToEdit.Nodes == null)
-            //{
-            //	nodeToEdit.Nodes = new List<Node>();
-
-            //	nodeToEdit.Nodes.Add(newNode);
-            //}
-            //else
-            //{
-            //	nodeToEdit.Nodes.Insert(0, newNode);
-            //}
-
-            //_specIfDataWriter.UpdateNode(nodeToEdit);
 
         }
 
@@ -299,18 +404,18 @@ namespace MDD4All.SpecIF.ViewModels
 
         private Node CreateNewNodeForAddition()
         {
-            Node result = new Node();
-            //{
-            //    ID = SpecIfGuidGenerator.CreateNewSpecIfGUID(),
-            //    Revision = SpecIfGuidGenerator.CreateNewRevsionGUID(),
-            //    ChangedAt = DateTime.Now,
-            //    ResourceReference = new Key()
-            //    {
-            //        ID = SelectedReferencedResource.Resource.ID,
-            //        Revision = SpecIfGuidGenerator.CreateNewRevsionGUID()
-            //    }
+            Node result = new Node()
+            {
+                ID = SpecIfGuidGenerator.CreateNewSpecIfGUID(),
+                Revision = SpecIfGuidGenerator.CreateNewRevsionGUID(),
+                ChangedAt = DateTime.Now,
+                IsHierarchyRoot = false,
 
-            //};
+            };
+
+            Key resourceKey = new Key(ResourceUnderEdit.Resource.ID, ResourceUnderEdit.Resource.Revision);
+
+            result.ResourceReference = resourceKey;
 
             return result;
         }

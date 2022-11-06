@@ -7,6 +7,7 @@ using MDD4All.SpecIF.DataModels.Manipulation;
 using System.Collections.ObjectModel;
 using MDD4All.SpecIF.ViewModels.Cache;
 using MDD4All.UI.DataModels.Tree;
+using System.Xml.Xsl;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -60,8 +61,8 @@ namespace MDD4All.SpecIF.ViewModels
                         Node childNode = _specIfDataReader.GetNodeByKey(nodeReference);
 
                         HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
-                        hierarchyViewModel.Index = counter;
-                        hierarchyViewModel.Depth = 1;
+                        //hierarchyViewModel.Index = counter;
+                        //hierarchyViewModel.Depth = 1;
                         hierarchyViewModel.Parent = this;
 
                         counter++;
@@ -79,6 +80,12 @@ namespace MDD4All.SpecIF.ViewModels
                                                                              MetadataReader,
                                                                              DataReader,
                                                                              DataWriter);
+        }
+
+        public void StructureHasChanged()
+        {
+            _rootNodesInitialized = false;
+            _children = null;
         }
 
         private ISpecIfMetadataReader _metadataReader;
@@ -283,13 +290,30 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return _index;
+                int result = 0;
+
+                if(Parent != null)
+                {
+                    int counter = 0;
+                    foreach(HierarchyViewModel child in Parent.Children)
+                    {
+                        if(child == this)
+                        {
+                            result = counter;
+                            break;
+                        }
+                        counter++;
+                    }
+
+                }
+
+                return result;
             }
 
-            set
-            {
-                _index = value;
-            }
+            //set
+            //{
+            //    _index = value;
+            //}
         }
 
         public string Level
@@ -351,7 +375,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public int Depth { get; set; }
+        //public int Depth { get; set; }
 
         private ObservableCollection<ITreeNode> _children = null;
 
@@ -369,14 +393,14 @@ namespace MDD4All.SpecIF.ViewModels
 
                     foreach (Node child in _hierarchyNode.Nodes)
                     {
-                        HierarchyViewModel resourceViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
+                        HierarchyViewModel childViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
 
-                        resourceViewModel.Parent = this;
-                        resourceViewModel.Index = counter;
-                        resourceViewModel.Depth = Depth + 1;
+                        childViewModel.Parent = this;
+                        //childViewModel.Index = counter;
+                        //childViewModel.Depth = Depth + 1;
                         counter++;
 
-                        _children.Add(resourceViewModel);
+                        _children.Add(childViewModel);
                     }
 
                 }
