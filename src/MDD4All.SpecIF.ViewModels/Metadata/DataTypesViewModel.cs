@@ -3,7 +3,7 @@ using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System.Collections.Generic;
 
-namespace MDD4All.SpecIF.ViewModels
+namespace MDD4All.SpecIF.ViewModels.Metadata
 {
     public class DataTypesViewModel : ViewModelBase
     {
