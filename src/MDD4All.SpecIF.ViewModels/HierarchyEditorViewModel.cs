@@ -242,7 +242,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
             else // create new resource
             {
-                if (SelectedResourceClassKey != null && SelectedNode.Parent != null)
+                if (SelectedResourceClassKey != null && ((SelectedNode.Parent != null && (editType == NEW_ABOVE || editType == NEW_BELOW)) || editType == NEW_CHILD))
                 {
                     Resource newResource = SpecIfDataFactory.CreateResource(SelectedResourceClassKey, _metadataReader);
                     ResourceUnderEdit = new ResourceViewModel(_metadataReader,
