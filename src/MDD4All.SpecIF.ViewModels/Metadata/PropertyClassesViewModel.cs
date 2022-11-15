@@ -49,13 +49,19 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         public PropertyClassViewModel PropertyClassUnderEdit { get; set; }
 
-        public List<DataType> DataTypes
+        public List<DataTypeViewModel> DataTypes
         {
             get
             {
-                List<DataType> result = new List<DataType>();
+                List<DataTypeViewModel> result = new List<DataTypeViewModel>();
 
-                result = _specIfMetadataReader.GetAllDataTypes();
+                List<DataType> dataTypes = _specIfMetadataReader.GetAllDataTypes();
+
+                foreach(DataType dataType in dataTypes)
+                {
+                    DataTypeViewModel dataTypeViewModel = new DataTypeViewModel(dataType, _specIfMetadataReader);
+                    result.Add(dataTypeViewModel);
+                }
 
                 return result;
             }
@@ -108,7 +114,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         private void ExecuteSavePropertyClass()
         {
-
+            _specIfMetadataWriter.AddPropertyClass(PropertyClassUnderEdit.PropertyClass);
 
             EditModeActive = false;
             StateChanged = true;

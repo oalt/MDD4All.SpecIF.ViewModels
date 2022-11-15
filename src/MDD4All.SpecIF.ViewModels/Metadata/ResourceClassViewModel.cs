@@ -27,7 +27,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         private void InitializeCommands()
         {
-            AddPropertyClassCommand = new RelayCommand(ExecuteAddPropertyClass);
+            AddPropertyClassCommand = new RelayCommand<string>(ExecuteAddPropertyClass);
         }
 
         public ResourceClass ResourceClass { get; set; }
@@ -73,11 +73,20 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
             }
         }
 
+        public Key SelectedPropertyClassToAdd { get; set; }
+
         public ICommand AddPropertyClassCommand { get; private set; }
 
-        private void ExecuteAddPropertyClass()
+        private void ExecuteAddPropertyClass(string keyString)
         {
+            Key key = new Key();
+            key.InitailizeFromKeyString(keyString);
 
+            if(ResourceClass.PropertyClasses == null)
+            {
+                ResourceClass.PropertyClasses = new List<Key>();
+            }
+            ResourceClass.PropertyClasses.Add(key);
         }
     }
 }

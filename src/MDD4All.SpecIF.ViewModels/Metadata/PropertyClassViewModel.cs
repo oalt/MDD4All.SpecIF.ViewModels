@@ -24,6 +24,19 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         public PropertyClass PropertyClass { get; private set; }
 
+        public Key DataTypeKey
+        {
+            get
+            {
+                return PropertyClass.DataType;
+            }
+
+            set
+            {
+                PropertyClass.DataType = value;
+            }
+        }
+
         public string Description
         {
             get

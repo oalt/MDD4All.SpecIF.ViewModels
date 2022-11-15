@@ -114,7 +114,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         private void ExecuteSaveResourceClass()
         {
-
+            _specIfMetadataWriter.AddResourceClass(ResourceClassUnderEdit.ResourceClass);
 
             EditModeActive = false;
             StateChanged = true;
