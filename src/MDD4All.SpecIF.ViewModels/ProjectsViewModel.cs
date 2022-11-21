@@ -66,7 +66,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             _dataWriter.AddHierarchy(rootNode);
 
-            HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
+            NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader,
                                                                            _dataReader,
                                                                            _dataWriter,
                                                                            new Key(rootNode.ID, rootNode.Revision));

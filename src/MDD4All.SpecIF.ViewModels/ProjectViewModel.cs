@@ -34,7 +34,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             foreach (Node node in projectHierarchies)
             {
-                HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader,
+                NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader,
                                                                                _dataReader,
                                                                                _dataWriter,
                                                                                node);
@@ -42,7 +42,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public ObservableCollection<HierarchyViewModel> Hierarchies { get; set; } = new ObservableCollection<HierarchyViewModel>();
+        public ObservableCollection<NodeViewModel> Hierarchies { get; set; } = new ObservableCollection<NodeViewModel>();
 
         public string ProjectID
         {

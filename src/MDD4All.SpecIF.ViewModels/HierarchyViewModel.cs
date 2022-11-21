@@ -1,21 +1,19 @@
 ﻿using GalaSoft.MvvmLight;
+using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
+using System.Windows.Input;
+using GalaSoft.MvvmLight.Command;
+using MDD4All.SpecIF.DataFactory;
+using MDD4All.SpecIF.DataModels.Helpers;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using MDD4All.SpecIF.DataModels.Manipulation;
-using System.Collections.ObjectModel;
-using MDD4All.SpecIF.ViewModels.Cache;
 using MDD4All.UI.DataModels.Tree;
-using System.Xml.Xsl;
 
 namespace MDD4All.SpecIF.ViewModels
 {
-    public class HierarchyViewModel : ViewModelBase, ITreeNode
+    public class HierarchyViewModel : ViewModelBase
     {
-
-        private bool _rootNodesInitialized = false;
-
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
                                   ISpecIfDataReader dataReader,
                                   ISpecIfDataWriter dataWriter,
@@ -25,68 +23,35 @@ namespace MDD4All.SpecIF.ViewModels
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
 
-            _hierarchyNode = _specIfDataReader.GetHierarchyByKey(key);
-            _rootNodes.Add(this);
-            InitializeReferencedResource(_hierarchyNode.ResourceReference);
+            InitializeCommands();
+
+            Node rootNode = _specIfDataReader.GetHierarchyByKey(key);
+            RootNode = new NodeViewModel(metadataReader, dataReader, dataWriter, rootNode);
+            RootNode.EditorViewModel = this;
+
+            RootNode.IsExpanded = true;
         }
 
-        public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
-                                  ISpecIfDataReader dataReader,
-                                  ISpecIfDataWriter dataWriter,
-                                  Node hierarchy)
+        private void InitializeCommands()
         {
-            _metadataReader = metadataReader;
-            _specIfDataWriter = dataWriter;
-            _specIfDataReader = dataReader;
+            StartEditResourceCommand = new RelayCommand<string>(ExecuteStartEditResource);
+            ConfirmEditResourceCommand = new RelayCommand(ExecuteConfirmEditResource);
+            CancelEditResourceCommand = new RelayCommand(ExecuteCancelEditResource);
 
-            _hierarchyNode = hierarchy;
-            _rootNodes.Add(this);
+            StartDeleteResourceCommand = new RelayCommand(ExecuteStartDeleteResource);
+            DeleteResourceCommand = new RelayCommand(ExecuteDeleteResource);
+            CancelDeleteResourceCommand = new RelayCommand(ExecuteCancelDeleteResource);
 
-            InitializeReferencedResource(_hierarchyNode.ResourceReference);
+            MoveNodeUpCommand = new RelayCommand(ExecuteMoveNodeUp);
+            MoveNodeDownCommand = new RelayCommand(ExecuteMoveNodeDown);
+            NodeOneLevelHigherCommand = new RelayCommand(ExecuteNodeOneLevelHigher);
+            NodeOneLevelLowerCommand = new RelayCommand(ExecuteNodeOneLevelLower);
         }
 
-
-
-
-        private void InitializeData()
-        {
-
-            if (_hierarchyNode != null)
-            {
-                int counter = 0;
-                if (_hierarchyNode.NodeReferences != null)
-                {
-                    foreach (Key nodeReference in _hierarchyNode.NodeReferences)
-                    {
-                        Node childNode = _specIfDataReader.GetNodeByKey(nodeReference);
-
-                        HierarchyViewModel hierarchyViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
-                        //hierarchyViewModel.Index = counter;
-                        //hierarchyViewModel.Depth = 1;
-                        hierarchyViewModel.Parent = this;
-
-                        counter++;
-                    }
-
-
-                }
-
-            }
-        }
-
-        private void InitializeReferencedResource(Key key)
-        {
-            ReferencedResource = CachedViewModelFactory.GetResourceViewModel(_hierarchyNode.ResourceReference,
-                                                                             MetadataReader,
-                                                                             DataReader,
-                                                                             DataWriter);
-        }
-
-        public void StructureHasChanged()
-        {
-            _rootNodesInitialized = false;
-            _children = null;
-        }
+        public const string EDIT_EXISTING = "Edit existing";
+        public const string NEW_CHILD = "New child";
+        public const string NEW_BELOW = "New resource below";
+        public const string NEW_ABOVE = "New resource above";
 
         private ISpecIfMetadataReader _metadataReader;
 
@@ -116,7 +81,61 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private string _editType = "edit";
+        public NodeViewModel RootNode { get; set; }
+
+        private NodeViewModel _selectedNode;
+
+        public NodeViewModel SelectedNode
+        {
+            get
+            {
+                return _selectedNode;
+            }
+            set
+            {
+                _selectedNode = value;
+                ExpandSelectedNodeToRoot();
+                RaisePropertyChanged("SelectedNode");
+                RaisePropertyChanged("StateChanged");
+            }
+        }
+
+        private bool _editorActive = false;
+
+        public bool EditorActive
+        {
+            get
+            {
+                // get the value always from the root node
+                bool result = _editorActive;
+
+
+                return result;
+            }
+
+
+            set
+            {
+                _editorActive = value;
+                RaisePropertyChanged("EditorActive");
+            }
+        }
+
+        private ResourceViewModel _resourceUnderEdit;
+
+        public ResourceViewModel ResourceUnderEdit
+        {
+            get
+            {
+                return _resourceUnderEdit;
+            }
+            set
+            {
+                _resourceUnderEdit = value;
+            }
+        }
+
+        private string _editType;
 
         public string EditType
         {
@@ -124,368 +143,432 @@ namespace MDD4All.SpecIF.ViewModels
             set { _editType = value; }
         }
 
-        public Key RootResourceClassKey
+        public string EditDialogTitleKey
         {
             get
             {
-                Key result = null;
-                if (ReferencedResource != null)
+                string result = "Title.EditResource";
+
+                switch (EditType)
                 {
-                    result = ReferencedResource.Resource.Class;
+                    case EDIT_EXISTING:
+                        result = "Title.EditResource";
+                        break;
+
+                    case NEW_CHILD:
+                        result = "Title.NewResource";
+                        break;
+
+                    case NEW_BELOW:
+                        result = "Title.NewResource";
+                        break;
+
+                    case NEW_ABOVE:
+                        result = "Title.NewResource";
+                        break;
                 }
 
                 return result;
             }
         }
 
-        public Key HierarchyKey
+
+        public bool StateChanged
         {
-            get
-            {
-                Key result = null;
-
-                if (HierarchyNode != null)
-                {
-                    result = new Key(HierarchyNode.ID, HierarchyNode.Revision);
-                }
-
-                return result;
-            }
-        }
-
-        public ResourceViewModel ReferencedResource { get; set; }
-
-
-        public string Type
-        {
-            get
-            {
-                string result = "";
-                result = ReferencedResource.Resource.GetTypeName(_metadataReader);
-                return result;
-            }
-        }
-
-        private List<HierarchyViewModel> _linearResourceList;
-
-        public List<HierarchyViewModel> LinearResourceList
-        {
-            get
-            {
-                _linearResourceList = new List<HierarchyViewModel>();
-
-                foreach (HierarchyViewModel rootNode in RootNodes)
-                {
-                    _linearResourceList.Add(rootNode);
-                    InitilizeLinearResourceListRecursively(rootNode.Children);
-                }
-
-                return _linearResourceList;
-            }
-        }
-
-
-
-        private void InitilizeLinearResourceListRecursively(ObservableCollection<ITreeNode> children)
-        {
-            foreach (HierarchyViewModel child in children)
-            {
-                //child.HierarchyKey = HierarchyKey;
-                _linearResourceList.Add(child);
-
-                if (child.Children != null)
-                {
-                    InitilizeLinearResourceListRecursively(child.Children);
-                }
-
-            }
-        }
-
-
-        private ObservableCollection<HierarchyViewModel> _rootNodes = new ObservableCollection<HierarchyViewModel>();
-
-        public ObservableCollection<HierarchyViewModel> RootNodes
-        {
-            get
-            {
-                if (!_rootNodesInitialized)
-                {
-                    InitializeData();
-                    _rootNodesInitialized = true;
-                }
-                return _rootNodes;
-            }
-        }
-
-        private HierarchyEditorViewModel _editorViewModel;
-
-        public HierarchyEditorViewModel EditorViewModel
-        {
-            get
-            {
-                HierarchyEditorViewModel result = null;
-                if (Parent == null)
-                {
-                    result = _editorViewModel;
-                }
-                else
-                {
-                    ITreeNode node = this;
-                    while (node.Parent != null)
-                    {
-                        node = node.Parent;
-                    }
-                    result = (node as HierarchyViewModel).EditorViewModel;
-
-                }
-                return result;
-            }
-
             set
             {
-                _editorViewModel = value;
-            }
-
-        }
-
-        private Node _hierarchyNode;
-
-        public Node HierarchyNode
-        {
-            get
-            {
-                return _hierarchyNode;
-            }
-        }
-
-        public string Title
-        {
-            get
-            {
-                string result = "";
-                if (ReferencedResource != null)
+                if (value)
                 {
-                    result = ReferencedResource.Title;
+                    RaisePropertyChanged("StateChanged");
                 }
-                return result;
             }
         }
 
-        public string ClassTitle
+        public Key SelectedResourceClassKey
         {
-            get
+            get;
+
+            set;
+
+        }
+
+        public bool ShowDeleteConfirm { get; set; } = false;
+
+        #region COMMAND_DEFINITIONS
+
+        public ICommand StartEditResourceCommand { get; private set; }
+
+        public ICommand CancelEditResourceCommand { get; private set; }
+
+        public ICommand ConfirmEditResourceCommand { get; private set; }
+
+        public ICommand StartCreateNewResourceCommand { get; private set; }
+
+        public ICommand AddNewResourceAboveCommand { get; private set; }
+
+        public ICommand AddNewResourceAsChildCommand { get; private set; }
+
+        public ICommand AddNewResourceBelowCommand { get; private set; }
+
+        public ICommand StartDeleteResourceCommand { get; private set; }
+
+        public ICommand DeleteResourceCommand { get; private set; }
+
+        public ICommand CancelDeleteResourceCommand { get; private set; }
+
+        public ICommand MoveNodeUpCommand { get; private set; }
+
+        public ICommand MoveNodeDownCommand { get; private set; }
+
+        public ICommand NodeOneLevelHigherCommand { get; private set; }
+
+        public ICommand NodeOneLevelLowerCommand { get; private set; }
+
+        #endregion
+
+        #region COMMAND_IMPLEMENTATIONS
+
+        private void ExecuteStartEditResource(string editType)
+        {
+            EditType = editType;
+
+            if (editType == EDIT_EXISTING)
             {
-                string result = "";
-                if (ReferencedResource != null)
+                NodeViewModel selectedElement = ((NodeViewModel)SelectedNode);
+
+                Resource clonedResource = selectedElement.ReferencedResource.Resource.CreateNewRevisionForEdit(_metadataReader);
+                ResourceUnderEdit = new ResourceViewModel(_metadataReader,
+                                                          _specIfDataReader,
+                                                          _specIfDataWriter,
+                                                          clonedResource);
+            }
+            else // create new resource
+            {
+                if (SelectedResourceClassKey != null && ((SelectedNode.Parent != null && (editType == NEW_ABOVE || editType == NEW_BELOW)) || editType == NEW_CHILD))
                 {
-                    result = ReferencedResource.Type;
+                    Resource newResource = SpecIfDataFactory.CreateResource(SelectedResourceClassKey, _metadataReader);
+                    ResourceUnderEdit = new ResourceViewModel(_metadataReader,
+                                                              _specIfDataReader,
+                                                              _specIfDataWriter,
+                                                              newResource);
                 }
-                return result;
+
+            }
+
+            if (ResourceUnderEdit != null)
+            {
+                ResourceUnderEdit.IsInEditMode = true;
+
+                EditorActive = true;
             }
         }
 
-        private int _index = 0;
-
-        public int Index
+        private void ExecuteConfirmEditResource()
         {
-            get
+            if (EditType == EDIT_EXISTING)
             {
-                int result = 0;
+                _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
 
-                if(Parent != null)
+                NodeViewModel selectedElement = SelectedNode;
+
+                selectedElement.ReferencedResource = ResourceUnderEdit;
+
+                selectedElement.HierarchyNode.ResourceReference.Revision = ResourceUnderEdit.Resource.Revision;
+
+                _specIfDataWriter.UpdateHierarchy(selectedElement.HierarchyNode);
+            }
+            else
+            {
+                _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
+
+                Node selectedNode = SelectedNode.HierarchyNode;
+
+                Node newNode = CreateNewNodeForAddition();
+
+                NodeViewModel newTreeNodeViewModel = new NodeViewModel(_metadataReader,
+                                                                           _specIfDataReader,
+                                                                           _specIfDataWriter,
+                                                                           newNode);
+
+                newTreeNodeViewModel.EditorViewModel = this;
+
+                if (EditType == NEW_CHILD)
                 {
-                    int counter = 0;
-                    foreach(HierarchyViewModel child in Parent.Children)
+                    // integrate in view model
+                    newTreeNodeViewModel.Parent = SelectedNode;
+
+
+                    if (selectedNode.Nodes == null)
                     {
-                        if(child == this)
+                        selectedNode.Nodes = new List<Node>();
+
+                        selectedNode.Nodes.Add(newNode);
+
+                        SelectedNode.Children.Add(newTreeNodeViewModel);
+                    }
+                    else
+                    {
+                        selectedNode.Nodes.Insert(0, newNode);
+                        SelectedNode.Children.Insert(0, newTreeNodeViewModel);
+                    }
+
+                    // add to persistent storage
+                    _specIfDataWriter.AddNodeAsFirstChild(selectedNode.ID, newNode);
+
+                    SelectedNode.IsExpanded = true;
+
+                }
+                else if (EditType == NEW_BELOW)
+                {
+                    if (SelectedNode.Parent != null)
+                    {
+                        newTreeNodeViewModel.Parent = SelectedNode.Parent;
+
+                        NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
+
+                        if ((SelectedNode.Index + 1) == SelectedNode.HierarchyNode.Nodes.Count)
                         {
-                            result = counter;
-                            break;
+                            parentViewModel.HierarchyNode.Nodes.Add(newNode);
+
+                            parentViewModel.Children.Add(newTreeNodeViewModel);
                         }
-                        counter++;
+                        else
+                        {
+                            parentViewModel.HierarchyNode.Nodes.Insert(SelectedNode.Index + 1, newNode);
+
+                            parentViewModel.Children.Insert(SelectedNode.Index + 1, newTreeNodeViewModel);
+                        }
+
+                        // add to persistent storage
+                        _specIfDataWriter.AddNodeAsPredecessor(selectedNode.ID, newNode);
                     }
 
                 }
-
-                return result;
-            }
-
-            //set
-            //{
-            //    _index = value;
-            //}
-        }
-
-        public string Level
-        {
-            get
-            {
-                string result = "";
-
-                result = "" + (Index + 1);
-
-                ITreeNode item = this;
-
-                while (item.Parent != null)
+                else if (EditType == NEW_ABOVE)
                 {
-                    result = (item.Parent.Index + 1) + "." + result;
-                    item = item.Parent;
-                }
-
-                return result;
-            }
-        }
-
-        private ITreeNode _parent = null;
-
-        public ITreeNode Parent
-        {
-            get
-            {
-                return _parent;
-            }
-
-            set
-            {
-                _parent = value;
-            }
-        }
-
-        private string _nodeID = "";
-
-        public string NodeID
-        {
-            get
-            {
-                string result = "";
-                if (_hierarchyNode != null)
-                {
-                    result = _hierarchyNode.ID;
-                }
-                else
-                {
-                    result = _nodeID;
-                }
-                return result;
-            }
-
-            set
-            {
-                _nodeID = value;
-            }
-        }
-
-        //public int Depth { get; set; }
-
-        private ObservableCollection<ITreeNode> _children = null;
-
-        public ObservableCollection<ITreeNode> Children
-        {
-            get
-            {
-                ObservableCollection<ITreeNode> result = null;
-
-                if (_children == null && _hierarchyNode.Nodes != null)
-                {
-                    _children = new ObservableCollection<ITreeNode>();
-                    int counter = 0;
-
-
-                    foreach (Node child in _hierarchyNode.Nodes)
+                    if (SelectedNode.Parent != null)
                     {
-                        HierarchyViewModel childViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
+                        newTreeNodeViewModel.Parent = SelectedNode.Parent;
 
-                        childViewModel.Parent = this;
-                        //childViewModel.Index = counter;
-                        //childViewModel.Depth = Depth + 1;
-                        counter++;
+                        NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
-                        _children.Add(childViewModel);
+                        if (SelectedNode.Index == 0) // the selected node is the first
+                        {
+                            parentViewModel.HierarchyNode.Nodes.Insert(0, newNode);
+
+                            parentViewModel.Children.Insert(0, newTreeNodeViewModel);
+
+                            // add to persistent storage
+                            _specIfDataWriter.AddNodeAsFirstChild(parentViewModel.HierarchyNode.ID, newNode);
+                        }
+                        else // the selected node index > 0
+                        {
+                            Node predecessorNode = parentViewModel.HierarchyNode.Nodes[SelectedNode.Index - 1];
+
+                            parentViewModel.HierarchyNode.Nodes.Insert(SelectedNode.Index, newNode);
+
+                            parentViewModel.Children.Insert(SelectedNode.Index, newTreeNodeViewModel);
+
+                            // add to persistent storage
+                            _specIfDataWriter.AddNodeAsPredecessor(predecessorNode.ID, newNode);
+                        }
+
+
+
                     }
-
                 }
+            }
 
-                result = _children;
+            ResourceUnderEdit = null;
+            EditorActive = false;
 
-                return result;
+            StateChanged = true;
+        }
+
+        private void ExecuteCancelEditResource()
+        {
+            ResourceUnderEdit = null;
+            EditorActive = false;
+        }
+
+
+        private void ExecuteStartDeleteResource()
+        {
+            if (SelectedNode.Parent != null)
+            {
+                ShowDeleteConfirm = true;
             }
         }
 
-        public bool IsSelected
+        private void ExecuteDeleteResource()
         {
-            get
+            ShowDeleteConfirm = false;
+
+            if (SelectedNode != null)
             {
-                bool result = false;
-                if (EditorViewModel.SelectedNode == this)
+                NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
+
+                int index = SelectedNode.Index;
+
+                parentViewModel.Children.RemoveAt(index);
+                parentViewModel.HierarchyNode.Nodes.RemoveAt(index);
+                _specIfDataWriter.UpdateHierarchy(parentViewModel.HierarchyNode);
+
+                SelectedNode = null;
+            }
+
+
+        }
+
+        private void ExecuteCancelDeleteResource()
+        {
+            ShowDeleteConfirm = false;
+        }
+
+        private void ExecuteMoveNodeDown()
+        {
+            if(SelectedNode != null && SelectedNode.Parent != null)
+            {
+                NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
+
+                int childCount = parentViewModel.Children.Count;
+
+                int currentIndex = SelectedNode.Index;
+
+                if(SelectedNode.Index < childCount - 1)
                 {
-                    result = true;
-                }
-                return result;
-            }
+                    parentViewModel.Children.RemoveAt(currentIndex);
+                    parentViewModel.Children.Insert(currentIndex + 1, SelectedNode);
 
-            set
-            {
-                
+                    NodeViewModel newSibling = parentViewModel.Children[currentIndex] as NodeViewModel;
+
+                    _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSibling.HierarchyNode.ID);
+
+                    StateChanged = true;
+                }
             }
         }
 
-        public bool IsExpanded { get; set; } = false;
-
-        private static List<ResourceClass> _resourceTypes = null;
-
-        public List<ResourceClass> ResourceTypes
+        private void ExecuteMoveNodeUp()
         {
-            get
+            if (SelectedNode != null && SelectedNode.Parent != null)
             {
-                if (_resourceTypes == null)
+                NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
+
+                int childCount = parentViewModel.Children.Count;
+
+                int currentIndex = SelectedNode.Index;
+
+                if (SelectedNode.Index > 0)
                 {
-                    _resourceTypes = _metadataReader.GetAllResourceClasses();
+                    parentViewModel.Children.RemoveAt(currentIndex);
+                    parentViewModel.Children.Insert(currentIndex - 1, SelectedNode);
+
+                    string newSiblingId = null;
+
+                    if(currentIndex - 1 > 0)
+                    {
+                        NodeViewModel newSibling = parentViewModel.Children[currentIndex - 2] as NodeViewModel;
+                        
+                        newSiblingId = newSibling.HierarchyNode.ID;
+                    }
+                    
+
+                    _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSiblingId);
+
+                    StateChanged = true;
                 }
-                return _resourceTypes;
             }
         }
 
-        public bool HasChildNodes
+        private void ExecuteNodeOneLevelHigher()
         {
-            get
+            if (SelectedNode != null && SelectedNode.Parent != null && SelectedNode.Index > 0)
             {
-                return Children?.Any() ?? false;
+                NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
+
+                int currentIndex = SelectedNode.Index;
+
+                NodeViewModel newParent = parentViewModel.Children[currentIndex - 1] as NodeViewModel;
+
+                string siblingID = null;
+                int newIndex = 0;
+                if(newParent.Children.Count > 0)
+                {
+                    NodeViewModel newSibling = newParent.Children[newParent.Children.Count - 1] as NodeViewModel;
+                    siblingID = newSibling.HierarchyNode.ID;
+                    newIndex = newSibling.Index + 1;
+                }
+
+                parentViewModel.Children.RemoveAt(currentIndex);
+                newParent.Children.Insert(newIndex, SelectedNode);
+                SelectedNode.Parent = newParent;
+
+                newParent.IsExpanded = true;
+
+                _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, newParent.HierarchyNode.ID, siblingID);
+
+                StateChanged = true;
             }
         }
 
-        public bool IsLoading
+        private void ExecuteNodeOneLevelLower()
         {
-            get
+            if (SelectedNode != null && SelectedNode.Parent != null && SelectedNode.Parent.Parent != null)
             {
-                bool result = ReferencedResource == null;
-                return result;
-            }
+                NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
+                int currentIndex = SelectedNode.Index;
+
+                int parentIndex = parentViewModel.Index;
+
+                parentViewModel.Children.RemoveAt(currentIndex);
+                parentViewModel.Parent.Children.Insert(parentIndex + 1, SelectedNode);
+                SelectedNode.Parent = parentViewModel.Parent;
+
+                _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, ((NodeViewModel)parentViewModel.Parent).HierarchyNode.ID, parentViewModel.HierarchyNode.ID);
+
+                StateChanged = true;
+            }
         }
 
+        #endregion
 
-        public bool IsDisabled
+        private Node CreateNewNodeForAddition()
         {
-            get
+            Node result = new Node()
             {
-                return false;
+                ID = SpecIfGuidGenerator.CreateNewSpecIfGUID(),
+                Revision = SpecIfGuidGenerator.CreateNewRevsionGUID(),
+                ChangedAt = DateTime.Now,
+                IsHierarchyRoot = false,
 
-            }
+            };
 
-            set
-            { }
-        }
+            Key resourceKey = new Key(ResourceUnderEdit.Resource.ID, ResourceUnderEdit.Resource.Revision);
 
-        public bool CanDelete(string nodeID)
-        {
-            bool result = true;
-
-            if (HierarchyNode.Nodes.Count() == 1 && HierarchyNode.Nodes[0].ID == nodeID)
-            {
-                result = false;
-            }
+            result.ResourceReference = resourceKey;
 
             return result;
         }
+
+        private void ExpandSelectedNodeToRoot()
+        {
+            bool stateChanged = false;
+
+            ITreeNode currentNode = SelectedNode.Parent;
+            while(currentNode != null)
+            {
+                if (currentNode.IsExpanded == false)
+                {
+                    currentNode.IsExpanded = true;
+                    stateChanged = true;
+                }
+                currentNode = currentNode.Parent;
+            }
+
+            //StateChanged = stateChanged;
+        }
+        
     }
 }

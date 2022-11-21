@@ -560,11 +560,11 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public List<HierarchyViewModel> HierarchiesForResource
+        public List<NodeViewModel> HierarchiesForResource
         {
             get
             {
-                List<HierarchyViewModel> result = new List<HierarchyViewModel>();
+                List<NodeViewModel> result = new List<NodeViewModel>();
 
                 if (_resource != null)
                 {
@@ -572,7 +572,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                     foreach (Node node in hierarchyRoots)
                     {
-                        HierarchyViewModel resourceViewModel = new HierarchyViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, node);
+                        NodeViewModel resourceViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, node);
 
                         result.Add(resourceViewModel);
                     }
