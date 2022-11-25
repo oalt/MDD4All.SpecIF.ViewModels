@@ -207,6 +207,11 @@ namespace MDD4All.SpecIF.ViewModels
 
                 return result;
             }
+
+            set
+            {
+                Resource.SetPropertyValue("dcterms:description", value, _metadataReader, TextFormat.XHTML);
+            }
         }
 
         public string Creator

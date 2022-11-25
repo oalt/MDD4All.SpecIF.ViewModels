@@ -219,47 +219,47 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                string result = "plain";
+                string result = TextFormat.Plain;
 
-                string defaultFormat = "plain";
+                //string defaultFormat = "plain";
 
-                //PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
 
-                //if (propertyClass != null)
-                //{
-                //    if (!string.IsNullOrEmpty(propertyClass.Format))
-                //    {
-                //        defaultFormat = propertyClass.Format;
-                //    }
+                if (propertyClass != null)
+                {
+                    if (!string.IsNullOrEmpty(propertyClass.Format))
+                    {
+                        result = propertyClass.Format;
+                    }
 
-                //    if (Property.Values.Count > 0)
-                //    {
-                //        if (Property.Values[0].IsStringValue)
-                //        {
-                //            result = defaultFormat;
-                //        }
-                //        else
-                //        {
-                //            Value firstValue = Property.Values[0];
+                    //if (Property.Values.Count > 0)
+                    //{
+                    //    if (Property.Values[0].IsStringValue)
+                    //    {
+                    //        result = defaultFormat;
+                    //    }
+                    //    else
+                    //    {
+                    //        Value firstValue = Property.Values[0];
 
-                //            string format = firstValue.MultilanguageTexts[0].Format;
+                    //        string format = firstValue.MultilanguageTexts[0].Format;
 
-                //            if (!string.IsNullOrEmpty(format))
-                //            {
-                //                result = format;
-                //            }
-                //            else
-                //            {
-                //                result = defaultFormat;
-                //            }
-                //        }
-                //    }
-                //    else
-                //    {
-                //        result = defaultFormat;
-                //    }
+                    //        if (!string.IsNullOrEmpty(format))
+                    //        {
+                    //            result = format;
+                    //        }
+                    //        else
+                    //        {
+                    //            result = defaultFormat;
+                    //        }
+                    //    }
+                    //}
+                    //else
+                    //{
+                    //    result = defaultFormat;
+                    //}
 
-                //}
+                }
 
                 return result;
             }
