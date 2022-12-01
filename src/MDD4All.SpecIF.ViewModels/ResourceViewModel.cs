@@ -214,6 +214,27 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string Diagram
+        {
+            get
+            {
+                string result = "";
+
+                if (_resource != null)
+                {
+                    string diagram = _resource.GetPropertyValue("SpecIF:Diagram", _metadataReader);
+
+                    if (!string.IsNullOrWhiteSpace(diagram))
+                    {
+                        result = diagram;
+                    }
+
+                }
+
+                return result;
+            }
+        }
+
         public string Creator
         {
             get
@@ -530,26 +551,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         }
 
-        public string Diagram
-        {
-            get
-            {
-                string result = "";
-
-                if (_resource != null)
-                {
-                    string diagram = _resource.GetPropertyValue("SpecIF:Diagram", _metadataReader);
-
-                    if (!string.IsNullOrWhiteSpace(diagram))
-                    {
-                        result = diagram;
-                    }
-
-                }
-
-                return result;
-            }
-        }
+        
 
         public string FormattedJson
         {
