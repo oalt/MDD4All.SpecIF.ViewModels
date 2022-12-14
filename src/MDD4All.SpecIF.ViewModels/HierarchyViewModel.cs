@@ -379,6 +379,7 @@ namespace MDD4All.SpecIF.ViewModels
                 }
             }
 
+            ResourceUnderEdit.IsInEditMode = false;
             ResourceUnderEdit = null;
             EditorActive = false;
 
@@ -387,6 +388,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void ExecuteCancelEditResource()
         {
+            ResourceUnderEdit.IsInEditMode = false;
             ResourceUnderEdit = null;
             EditorActive = false;
         }
