@@ -8,6 +8,7 @@ using System.Windows.Input;
 using GalaSoft.MvvmLight.Command;
 using MDD4All.SpecIF.DataModels.Helpers;
 using Newtonsoft.Json;
+using MDD4All.SpecIF.ViewModels.Revisioning;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -23,7 +24,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             _node = null;
 
-            
+
         }
 
 
@@ -68,7 +69,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         }
 
-        
+
 
 
 
@@ -464,7 +465,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                         if (property == null)
                         {
-                            propertyViewModel = new PropertyViewModel(MetadataReader, new Key(propertyClass.ID, 
+                            propertyViewModel = new PropertyViewModel(MetadataReader, new Key(propertyClass.ID,
                                                                                               propertyClass.Revision));
                         }
                         else
@@ -472,7 +473,7 @@ namespace MDD4All.SpecIF.ViewModels
                             propertyViewModel = new PropertyViewModel(MetadataReader, property);
                         }
 
-                         
+
 
                         result.Add(propertyViewModel);
                     }
@@ -551,7 +552,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         }
 
-        
+
 
         public string FormattedJson
         {
@@ -638,6 +639,20 @@ namespace MDD4All.SpecIF.ViewModels
             foreach (Statement outStatement in allStatements.FindAll(stm => stm.StatementSubject.ID == _resource.ID))
             {
                 _outgoingStatements.Add(new StatementViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, outStatement));
+            }
+        }
+
+        private ResourceRevisionViewModel _resourceRevisionViewModel = null;
+
+        public ResourceRevisionViewModel ResourceRevisionViewModel
+        {
+            get
+            {
+                if (_resourceRevisionViewModel == null)
+                {
+                    _resourceRevisionViewModel = new ResourceRevisionViewModel(MetadataReader, DataReader, DataWriter, Key);
+                }
+                return _resourceRevisionViewModel;
             }
         }
 

@@ -17,6 +17,7 @@
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataModels.Manipulation\src\MDD4All.SpecIF.DataModels.Manipulation\MDD4All.SpecIF.DataModels.Manipulation-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataProvider.Contracts\src\MDD4All.SpecIF.DataProvider.Contracts\MDD4All.SpecIF.DataProvider.Contracts-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.UI.DataModels\src\MDD4All.UI.DataModels\MDD4All.UI.DataModels-dev.csproj" />
+    <ProjectReference Include="..\..\..\VisNetwork.Blazor.Models\src\VisNetwork.Blazor.Models\VisNetwork.Blazor.Models-dev.csproj" />
   </ItemGroup>
 
 </Project>
