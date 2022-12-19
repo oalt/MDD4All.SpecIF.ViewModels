@@ -2,13 +2,11 @@
 using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataProvider.Contracts;
-using System;
 using System.Collections.Generic;
-using System.Windows.Input;
-using GalaSoft.MvvmLight.Command;
-using MDD4All.SpecIF.DataModels.Helpers;
 using Newtonsoft.Json;
 using MDD4All.SpecIF.ViewModels.Revisioning;
+using Vis = VisNetwork.Blazor.Models;
+using MDD4All.SpecIF.ViewModels.Cache;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -36,6 +34,7 @@ namespace MDD4All.SpecIF.ViewModels
             _node = node;
 
             _resource = _specIfDataReader.GetResourceByKey(node.ResourceReference);
+            //InitializeStatements();
 
         }
 
@@ -45,6 +44,7 @@ namespace MDD4All.SpecIF.ViewModels
                                  Resource resource) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = resource;
+            //InitializeStatements();
         }
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
@@ -55,6 +55,7 @@ namespace MDD4All.SpecIF.ViewModels
             _resource = _specIfDataReader.GetResourceByKey(
                 new Key(resourceId)
                 );
+            //InitializeStatements();
         }
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
@@ -66,6 +67,7 @@ namespace MDD4All.SpecIF.ViewModels
             _resource = _specIfDataReader.GetResourceByKey(
                 new Key() { ID = resourceId, Revision = revision }
                 );
+            //InitializeStatements();
 
         }
 
@@ -186,11 +188,6 @@ namespace MDD4All.SpecIF.ViewModels
                     result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title")?.GetStringValue(_metadataReader);
                 }
 
-                if (string.IsNullOrEmpty(result) && _resource != null && _resource.GetTypeName(_metadataReader) != null)
-                {
-                    result = "[" + _resource.GetTypeName(_metadataReader) + "]";
-                }
-
                 return result;
             }
         }
@@ -273,20 +270,14 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                string result = "not implemented";
+                string result = "";
 
-                //Statement typeStatement = _specIfDataReader.GetAllStatementsForResource(new Key(_resource.ID, _resource.Revision)).Find(statement => statement.StatementSubject.ID == _resource.ID
-                //                                                                                               && statement.Title.ToSimpleTextString() == "rdf:type");
+                StatementViewModel typeStatement = OutgoingStatements.Find(statement => statement.Type == "rdf:type");
 
-                //if(typeStatement != null)
-                //{
-                //    Resource classifierResource = _specIfDataReader.GetResourceByKey(new Key(typeStatement.StatementObject.ID, typeStatement.Revision));
-
-                //    if(classifierResource != null)
-                //    {
-                //        result = classifierResource.GetPropertyValue("dcterms:title", _metadataReader);
-                //    }
-                //}
+                if (typeStatement != null)
+                {
+                    result = typeStatement.ObjectResource.Title;
+                }
 
                 return result;
             }
@@ -304,6 +295,18 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     result = "«" + result + "»";
                 }
+
+                return result;
+            }
+        }
+
+        public string LegacyType
+        {
+            get
+            {
+                string result = "";
+
+                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:type")?.GetStringValue(_metadataReader);
 
                 return result;
             }
@@ -449,6 +452,52 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string StatusColor
+        {
+            get
+            {
+                string result = "transparent";
+
+                string status = Resource.GetPropertyValue("SpecIF:LifeCycleStatus", _metadataReader);
+
+                if (status == "V-Status-0")
+                {
+                    result = "#888888";
+                }
+                else if (status == "V-Status-1")
+                {
+                    result = "#FF0000";
+                }
+                else if (status == "V-Status-2")
+                {
+                    result = "#FFFFFF";
+                }
+                else if (status == "V-Status-3")
+                {
+                    result = "#AAAAAA";
+                }
+                else if (status == "V-Status-4")
+                {
+                    result = "#0000FF";
+                }
+                else if (status == "V-Status-5")
+                {
+                    result = "#7771F0";
+                }
+                else if (status == "V-Status-6")
+                {
+                    result = "#00FF00";
+                }
+                else if (status == "V-Status-7")
+                {
+                    result = "#64A98A";
+                }
+
+                return result;
+            }
+        }
+
+
         public List<PropertyViewModel> Properties
         {
             get
@@ -590,6 +639,19 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public List<StatementViewModel> Statements
+        {
+            get
+            {
+                List<StatementViewModel> result = new List<StatementViewModel>();
+
+                result.AddRange(IncomingStatements);
+                result.AddRange(OutgoingStatements);
+
+                return result;
+            }
+        }
+
         private List<StatementViewModel> _incomingStatements = null;
 
         public List<StatementViewModel> IncomingStatements
@@ -629,17 +691,208 @@ namespace MDD4All.SpecIF.ViewModels
             _incomingStatements = new List<StatementViewModel>();
             _outgoingStatements = new List<StatementViewModel>();
 
-            List<Statement> allStatements = _specIfDataReader.GetAllStatementsForResource(new Key(_resource.ID, _resource.Revision));
+            List<StatementViewModel> allStatements = CachedViewModelFactory.GetStatementViewModels(Key,
+                                                                                                   _metadataReader,
+                                                                                                   _specIfDataReader, 
+                                                                                                   _specIfDataWriter);
 
-            foreach (Statement inStatement in allStatements.FindAll(stm => stm.StatementObject.ID == _resource.ID))
+            _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
+            _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
+
+            //foreach (StatementViewModel inStatement in allStatements.FindAll(stm => stm..ID == _resource.ID))
+            //{
+            //    StatementViewModel model = CachedViewModelFactory.GetStatementViewModel(new Key(inStatement.ID, inStatement.Revision), _metadataReader,
+            //                                                 _specIfDataReader, _specIfDataWriter);
+
+            //    _incomingStatements.Add(model);
+            //}
+
+            //foreach (Statement outStatement in allStatements.FindAll(stm => stm.StatementSubject.ID == _resource.ID))
+            //{
+
+            //    StatementViewModel model = CachedViewModelFactory.GetStatementViewModel(new Key(outStatement.ID, outStatement.Revision), 
+            //                                                                            _metadataReader,
+            //                                                                            _specIfDataReader, _specIfDataWriter);
+
+            //    _outgoingStatements.Add(model);
+            //}
+        }
+
+
+        private Vis.NetworkData _statementGraph = null;
+
+        public Vis.NetworkData StatementGraph
+        {
+            get
             {
-                _incomingStatements.Add(new StatementViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, inStatement));
+                if (_statementGraph == null)
+                {
+                    InitailizeStatementGraph();
+                }
+                return _statementGraph;
+            }
+        }
+
+        private void InitailizeStatementGraph()
+        {
+            List<Vis.Node> statementNodes = new List<Vis.Node>();
+            List<Vis.Edge> statementEdges = new List<Vis.Edge>();
+
+            Vis.Node resourceNode = new Vis.Node(Key.ToString(), CalculateLabelForStatementGraphNode(this), 2, "box");
+            resourceNode.Font = new Vis.NodeFontOption
+            {
+                Multi = true
+            };
+            resourceNode.Color = new Vis.NodeColorType()
+            {
+                Background = "#FFE690"
+            };
+
+            statementNodes.Add(resourceNode);
+
+            foreach (StatementViewModel incommingStatement in IncomingStatements)
+            {
+                if(!incommingStatement.IsLoop)
+                {
+                    Vis.Node node = new Vis.Node(incommingStatement.SubjectResource.Key.ToString(), CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
+                    node.Font = new Vis.NodeFontOption
+                    {
+                        Multi = true
+                    };
+                    statementNodes.Add(node);
+
+                    Vis.Edge edge = new Vis.Edge(incommingStatement.SubjectResource.Key.ToString(), Key.ToString());
+                    
+                    edge.Arrows = new Vis.Arrows()
+                    {
+                        To = new Vis.ArrowsOptions
+                        {
+                            Enabled = true,
+                            Type = "arrow"
+                        }
+                    };
+                    edge.Label = incommingStatement.Type;
+
+                    statementEdges.Add(edge);
+                }
             }
 
-            foreach (Statement outStatement in allStatements.FindAll(stm => stm.StatementSubject.ID == _resource.ID))
+            foreach (StatementViewModel outgoingStatement in OutgoingStatements)
             {
-                _outgoingStatements.Add(new StatementViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, outStatement));
+                if (!outgoingStatement.IsLoop)
+                {
+                    Vis.Node node = new Vis.Node(outgoingStatement.ObjectResource.Key.ToString(), CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource), 3, "box");
+                    node.Font = new Vis.NodeFontOption
+                    {
+                        Multi = true
+                    };
+                    statementNodes.Add(node);
+
+                    Vis.Edge edge = new Vis.Edge(Key.ToString(), outgoingStatement.ObjectResource.Key.ToString());
+                    edge.Arrows = new Vis.Arrows()
+                    {
+                        To = new Vis.ArrowsOptions
+                        {
+                            Enabled = true,
+                            Type = "arrow"
+                        }
+                    };
+                    edge.Label = outgoingStatement.Type;
+
+                    statementEdges.Add(edge);
+                }
             }
+
+            _statementGraph = new Vis.NetworkData();
+
+            _statementGraph.Nodes = statementNodes;
+            _statementGraph.Edges = statementEdges;
+            
+        }
+
+        public Vis.NetworkOptions StatementGraphOptions
+        {
+            get
+            {
+                return new Vis.NetworkOptions
+                {
+                    AutoResize = true,
+                    Height = "700px",
+                    Width = "100%",
+                    Nodes = new Vis.NodeOption
+                    {
+                        BorderWidth = 1,
+                        Color = new Vis.NodeColorType
+                        {
+                            Background = "#AAAAAA"
+                        }
+                    },
+                    Layout = new Vis.LayoutOptions
+                    {
+                        Hierarchical = new Vis.HierarchicalOptions
+                        {
+                            Enabled = true,
+                            Direction = "UD",
+                            SortMethod = "directed"
+                        }
+                    },
+                    Physics = new Vis.PhysicsOptions
+                    {
+                        //Enabled = false,
+                        HierarchicalRepulsion = new Vis.HierarchicalRepulsionOption 
+                        {
+                            AvoidOverlap = 1
+                        }
+                    },
+                    Interaction = new Vis.InteractionOptions
+                    {
+                        Multiselect = false
+                    },
+                    Manipulation = new Vis.ManipulationOptions
+                    {
+                        Enabled = false
+                    }
+                };
+            }
+        }
+
+        private string CalculateLabelForStatementGraphNode(ResourceViewModel resourceViewModel)
+        {
+
+            string result = "";
+
+            //if (resourceViewModel.Icon != "")
+            //{
+            //    result += "<b>" + Icon + "</b>";
+            //}
+            //else
+            //{
+                result += "[" + resourceViewModel.Type + "]\r\n";
+            //}
+
+            if (!string.IsNullOrEmpty(resourceViewModel.Stereotype))
+            {
+
+                result += resourceViewModel.Stereotype + "\r\n";
+            }
+
+            result += "<b>" + resourceViewModel.Title;
+
+            if (!string.IsNullOrEmpty(resourceViewModel.ClassifierName))
+            {
+
+                result += " :" + resourceViewModel.ClassifierName;
+            }
+
+            result += "</b>";
+
+            if (!string.IsNullOrEmpty(resourceViewModel.LegacyType))
+            {
+                result += "\r\n(" + resourceViewModel.LegacyType + ")";
+            }
+
+            return result;
+
         }
 
         private ResourceRevisionViewModel _resourceRevisionViewModel = null;

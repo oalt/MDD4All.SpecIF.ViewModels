@@ -266,6 +266,36 @@ namespace MDD4All.SpecIF.ViewModels
                 if (ReferencedResource != null)
                 {
                     result = ReferencedResource.Title;
+
+                }
+                return result;
+            }
+        }
+
+        public string TreeNodeText
+        {
+            get
+            {
+                string result = " ";
+
+                if (ReferencedResource != null)
+                {
+                    if(!string.IsNullOrEmpty(ReferencedResource.Stereotype))
+                    {
+                        result += ReferencedResource.Stereotype + " ";
+                    }
+
+                    result += ReferencedResource.Title;
+
+                    if(!string.IsNullOrEmpty(ReferencedResource.ClassifierName))
+                    {
+                        result += " :" + ReferencedResource.ClassifierName;
+                    }
+
+                    if (string.IsNullOrEmpty(result))
+                    {
+                        result = "[" + ReferencedResource.Type + "]";
+                    }
                 }
                 return result;
             }

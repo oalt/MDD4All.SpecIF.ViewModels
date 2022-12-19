@@ -7,6 +7,7 @@ namespace MDD4All.SpecIF.ViewModels.Cache
     public class CachedViewModelFactory
     {
         private static Dictionary<Key, ResourceViewModel> _resourceViewModelCache = new Dictionary<Key, ResourceViewModel>();
+        private static Dictionary<Key, List<StatementViewModel>> _statementViewModelCache = new Dictionary<Key, List<StatementViewModel>>();
 
         public static ResourceViewModel GetResourceViewModel(Key key,
                                                              ISpecIfMetadataReader metadataReader,
@@ -33,6 +34,43 @@ namespace MDD4All.SpecIF.ViewModels.Cache
                     _resourceViewModelCache.Add(new Key(resource.ID, resource.Revision), resourceViewModel);
 
                     result = resourceViewModel;
+                }
+
+            }
+
+            return result;
+        }
+
+        public static List<StatementViewModel> GetStatementViewModels(Key resourceKey,
+                                                               ISpecIfMetadataReader metadataReader,
+                                                               ISpecIfDataReader dataReader,
+                                                               ISpecIfDataWriter dataWriter)
+        {
+            List<StatementViewModel> result = null;
+
+            if (_statementViewModelCache.ContainsKey(resourceKey))
+            {
+                result = _statementViewModelCache[resourceKey];
+            }
+            else
+            {
+                List<Statement> statements = dataReader.GetAllStatementsForResource(resourceKey);
+
+                if (statements != null)
+                {
+                    List<StatementViewModel> viewModels = new List<StatementViewModel>();
+                    foreach (Statement statement in statements)
+                    {
+                        StatementViewModel resourceViewModel = new StatementViewModel(metadataReader,
+                                                                                    dataReader,
+                                                                                    dataWriter,
+                                                                                    statement);
+
+                        viewModels.Add(resourceViewModel);
+                    }
+                    _statementViewModelCache.Add(resourceKey, viewModels);
+
+                    result = viewModels;
                 }
 
             }
