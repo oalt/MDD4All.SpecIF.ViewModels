@@ -31,7 +31,7 @@ namespace MDD4All.SpecIF.ViewModels
             _fileSaver = fileSaver;
 
             _rootNodeViewModel = new NodeViewModel(dataProviderFactory.MetadataReader, dataProviderFactory.DataReader,
-                                                   dataProviderFactory.DataWriter, HierarchyKey);
+                                                   dataProviderFactory.DataWriter, null, HierarchyKey);
 
             SetDefaultFilenameFromTitle();
             InitializeCommands();

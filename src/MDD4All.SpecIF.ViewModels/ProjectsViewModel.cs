@@ -3,7 +3,6 @@ using GalaSoft.MvvmLight.Command;
 using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.Windows.Input;
 
 namespace MDD4All.SpecIF.ViewModels
@@ -66,13 +65,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             _dataWriter.AddHierarchy(rootNode);
 
-            NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader,
-                                                                           _dataReader,
-                                                                           _dataWriter,
-                                                                           new Key(rootNode.ID, rootNode.Revision));
-
             InitializeProjects();
-            //Hierarchies.Add(hierarchyViewModel);
         }
     }
 }

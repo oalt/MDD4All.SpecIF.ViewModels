@@ -7,7 +7,8 @@ using MDD4All.SpecIF.DataModels.Manipulation;
 using System.Collections.ObjectModel;
 using MDD4All.SpecIF.ViewModels.Cache;
 using MDD4All.UI.DataModels.Tree;
-using System.Xml.Xsl;
+using System.Threading.Tasks;
+using System;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -17,13 +18,15 @@ namespace MDD4All.SpecIF.ViewModels
         private bool _rootNodesInitialized = false;
 
         public NodeViewModel(ISpecIfMetadataReader metadataReader,
-                                  ISpecIfDataReader dataReader,
-                                  ISpecIfDataWriter dataWriter,
-                                  Key key)
+                             ISpecIfDataReader dataReader,
+                             ISpecIfDataWriter dataWriter,
+                             ITree tree,
+                             Key key)
         {
             _metadataReader = metadataReader;
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
+            _tree = tree;
 
             _hierarchyNode = _specIfDataReader.GetHierarchyByKey(key);
             _rootNodes.Add(this);
@@ -33,11 +36,13 @@ namespace MDD4All.SpecIF.ViewModels
         public NodeViewModel(ISpecIfMetadataReader metadataReader,
                                   ISpecIfDataReader dataReader,
                                   ISpecIfDataWriter dataWriter,
+                                  ITree tree,
                                   Node hierarchy)
         {
             _metadataReader = metadataReader;
             _specIfDataWriter = dataWriter;
             _specIfDataReader = dataReader;
+            _tree = tree;
 
             _hierarchyNode = hierarchy;
             _rootNodes.Add(this);
@@ -48,39 +53,44 @@ namespace MDD4All.SpecIF.ViewModels
 
 
 
-        private void InitializeData()
-        {
 
-            if (_hierarchyNode != null)
-            {
-                int counter = 0;
-                if (_hierarchyNode.NodeReferences != null)
-                {
-                    foreach (Key nodeReference in _hierarchyNode.NodeReferences)
-                    {
-                        Node childNode = _specIfDataReader.GetNodeByKey(nodeReference);
-
-                        NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, childNode);
-                        //hierarchyViewModel.Index = counter;
-                        //hierarchyViewModel.Depth = 1;
-                        hierarchyViewModel.Parent = this;
-
-                        counter++;
-                    }
-
-
-                }
-
-            }
-        }
 
         private void InitializeReferencedResource(Key key)
         {
-            ReferencedResource = CachedViewModelFactory.GetResourceViewModel(_hierarchyNode.ResourceReference,
+            Task.Run(() => InitializeReferencedResourceAsync(key));
+
+
+
+
+        }
+
+
+        private async void InitializeReferencedResourceAsync(Key key)
+        {
+            await Task.Run(() =>
+            {
+                ResourceViewModel resourceViewModel = CachedViewModelFactory.GetResourceViewModel(key,
                                                                              MetadataReader,
                                                                              DataReader,
                                                                              DataWriter);
+
+                //Task.Delay(1500).Wait();
+
+
+                ReferencedResource = resourceViewModel;
+
+
+                ReferencedResourceInitialized = true;
+                RaisePropertyChanged("IsLoading");
+                TreeStateChanged?.Invoke(this, EventArgs.Empty);
+            });
+
+
+
+
         }
+
+        public bool ReferencedResourceInitialized { get; set; } = false;
 
         public void StructureHasChanged()
         {
@@ -166,40 +176,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private List<NodeViewModel> _linearResourceList;
-
-        public List<NodeViewModel> LinearResourceList
-        {
-            get
-            {
-                _linearResourceList = new List<NodeViewModel>();
-
-                foreach (NodeViewModel rootNode in RootNodes)
-                {
-                    _linearResourceList.Add(rootNode);
-                    InitilizeLinearResourceListRecursively(rootNode.Children);
-                }
-
-                return _linearResourceList;
-            }
-        }
-
-
-
-        private void InitilizeLinearResourceListRecursively(ObservableCollection<ITreeNode> children)
-        {
-            foreach (NodeViewModel child in children)
-            {
-                //child.HierarchyKey = HierarchyKey;
-                _linearResourceList.Add(child);
-
-                if (child.Children != null)
-                {
-                    InitilizeLinearResourceListRecursively(child.Children);
-                }
-
-            }
-        }
+        
 
 
         private ObservableCollection<NodeViewModel> _rootNodes = new ObservableCollection<NodeViewModel>();
@@ -217,36 +194,62 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private HierarchyViewModel _editorViewModel;
-
-        public HierarchyViewModel EditorViewModel
+        private void InitializeData()
         {
-            get
+
+            if (_hierarchyNode != null)
             {
-                HierarchyViewModel result = null;
-                if (Parent == null)
+                int counter = 0;
+                if (_hierarchyNode.NodeReferences != null)
                 {
-                    result = _editorViewModel;
-                }
-                else
-                {
-                    ITreeNode node = this;
-                    while (node.Parent != null)
+                    foreach (Key nodeReference in _hierarchyNode.NodeReferences)
                     {
-                        node = node.Parent;
+                        Node childNode = _specIfDataReader.GetNodeByKey(nodeReference);
+
+                        NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, Tree, childNode);
+                        //hierarchyViewModel.Index = counter;
+                        //hierarchyViewModel.Depth = 1;
+                        hierarchyViewModel.Parent = this;
+
+                        counter++;
                     }
-                    result = (node as NodeViewModel).EditorViewModel;
+
 
                 }
-                return result;
-            }
 
-            set
-            {
-                _editorViewModel = value;
             }
-
         }
+
+        //private HierarchyViewModel _editorViewModel;
+
+        //public HierarchyViewModel EditorViewModel
+        //{
+        //    get
+        //    {
+        //        HierarchyViewModel result = null;
+        //        if (Parent == null)
+        //        {
+        //            result = _editorViewModel;
+        //        }
+        //        else
+        //        {
+        //            ITreeNode node = this;
+        //            while (node.Parent != null)
+        //            {
+        //                node = node.Parent;
+        //            }
+        //            result = (node as NodeViewModel).EditorViewModel;
+
+        //        }
+        //        return result;
+        //    }
+
+        //    set
+        //    {
+        //        _editorViewModel = value;
+        //    }
+
+        //}
 
         private Node _hierarchyNode;
 
@@ -280,14 +283,14 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (ReferencedResource != null)
                 {
-                    if(!string.IsNullOrEmpty(ReferencedResource.Stereotype))
+                    if (!string.IsNullOrEmpty(ReferencedResource.Stereotype))
                     {
                         result += ReferencedResource.Stereotype + " ";
                     }
 
                     result += ReferencedResource.Title;
 
-                    if(!string.IsNullOrEmpty(ReferencedResource.ClassifierName))
+                    if (!string.IsNullOrEmpty(ReferencedResource.ClassifierName))
                     {
                         result += " :" + ReferencedResource.ClassifierName;
                     }
@@ -322,12 +325,12 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 int result = 0;
 
-                if(Parent != null)
+                if (Parent != null)
                 {
                     int counter = 0;
-                    foreach(NodeViewModel child in Parent.Children)
+                    foreach (NodeViewModel child in Parent.Children)
                     {
-                        if(child == this)
+                        if (child == this)
                         {
                             result = counter;
                             break;
@@ -374,7 +377,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 ITreeNode node = this;
 
-                while(node.Parent != null)
+                while (node.Parent != null)
                 {
                     result++;
                     node = node.Parent;
@@ -441,7 +444,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                     foreach (Node child in _hierarchyNode.Nodes)
                     {
-                        NodeViewModel childViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, child);
+                        NodeViewModel childViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, Tree, child);
 
                         childViewModel.Parent = this;
                         //childViewModel.Index = counter;
@@ -464,7 +467,7 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 bool result = false;
-                if (EditorViewModel.SelectedNode == this)
+                if (Tree.SelectedNode == this)
                 {
                     result = true;
                 }
@@ -473,7 +476,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             set
             {
-                
+
             }
         }
 
@@ -522,6 +525,18 @@ namespace MDD4All.SpecIF.ViewModels
 
             set
             { }
+        }
+
+        private ITree _tree;
+
+        public event EventHandler TreeStateChanged;
+
+        public ITree Tree
+        {
+            get
+            {
+                return _tree;
+            }
         }
 
         public bool CanDelete(string nodeID)

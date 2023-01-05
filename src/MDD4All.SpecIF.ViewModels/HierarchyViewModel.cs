@@ -9,10 +9,11 @@ using MDD4All.SpecIF.DataModels.Helpers;
 using System;
 using System.Collections.Generic;
 using MDD4All.UI.DataModels.Tree;
+using System.Collections.ObjectModel;
 
 namespace MDD4All.SpecIF.ViewModels
 {
-    public class HierarchyViewModel : ViewModelBase
+    public class HierarchyViewModel : ViewModelBase, ITree
     {
         public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
                                   ISpecIfDataReader dataReader,
@@ -26,10 +27,13 @@ namespace MDD4All.SpecIF.ViewModels
             InitializeCommands();
 
             Node rootNode = _specIfDataReader.GetHierarchyByKey(key);
-            RootNode = new NodeViewModel(metadataReader, dataReader, dataWriter, rootNode);
-            RootNode.EditorViewModel = this;
+            RootNode = new NodeViewModel(metadataReader, dataReader, dataWriter, this, rootNode);
+            //RootNode.EditorViewModel = this;
 
             RootNode.IsExpanded = true;
+
+            _treeRootNodes = new ObservableCollection<ITreeNode>();
+            _treeRootNodes.Add(RootNode);
         }
 
         private void InitializeCommands()
@@ -83,9 +87,9 @@ namespace MDD4All.SpecIF.ViewModels
 
         public NodeViewModel RootNode { get; set; }
 
-        private NodeViewModel _selectedNode;
+        private ITreeNode _selectedNode;
 
-        public NodeViewModel SelectedNode
+        public ITreeNode SelectedNode
         {
             get
             {
@@ -96,7 +100,6 @@ namespace MDD4All.SpecIF.ViewModels
                 _selectedNode = value;
                 ExpandSelectedNodeToRoot();
                 RaisePropertyChanged("SelectedNode");
-                RaisePropertyChanged("StateChanged");
             }
         }
 
@@ -194,6 +197,60 @@ namespace MDD4All.SpecIF.ViewModels
 
         public bool ShowDeleteConfirm { get; set; } = false;
 
+        public ObservableCollection<ITreeNode> TreeRootNodes
+        {
+            get
+            {
+                return _treeRootNodes;
+            }
+        }
+
+        //private ITreeNode _selectedTreeNode;
+
+        //public ITreeNode SelectedTreeNode
+        //{
+        //    get
+        //    {
+        //        return _selectedTreeNode;
+        //    }
+
+        //    set
+        //    {
+        //        _selectedTreeNode = value;
+        //        RaisePropertyChanged("SelectedTreeNode");
+        //    }
+        //}
+
+        private List<NodeViewModel> _linearResourceList;
+
+        public List<NodeViewModel> LinearResourceList
+        {
+            get
+            {
+                _linearResourceList = new List<NodeViewModel>();
+
+                _linearResourceList.Add(RootNode);
+                InitilizeLinearResourceListRecursively(RootNode.Children);
+
+                return _linearResourceList;
+            }
+        }
+
+        private void InitilizeLinearResourceListRecursively(ObservableCollection<ITreeNode> children)
+        {
+            foreach (NodeViewModel child in children)
+            {
+                //child.HierarchyKey = HierarchyKey;
+                _linearResourceList.Add(child);
+
+                if (child.Children != null)
+                {
+                    InitilizeLinearResourceListRecursively(child.Children);
+                }
+
+            }
+        }
+
         #region COMMAND_DEFINITIONS
 
         public ICommand StartEditResourceCommand { get; private set; }
@@ -223,6 +280,11 @@ namespace MDD4All.SpecIF.ViewModels
         public ICommand NodeOneLevelHigherCommand { get; private set; }
 
         public ICommand NodeOneLevelLowerCommand { get; private set; }
+
+        private ObservableCollection<ITreeNode> _treeRootNodes = new ObservableCollection<ITreeNode>();
+
+
+
 
         #endregion
 
@@ -269,7 +331,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
 
-                NodeViewModel selectedElement = SelectedNode;
+                NodeViewModel selectedElement = SelectedNode as NodeViewModel;
 
                 selectedElement.ReferencedResource = ResourceUnderEdit;
 
@@ -281,16 +343,17 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 _specIfDataWriter.AddResource(ResourceUnderEdit.Resource);
 
-                Node selectedNode = SelectedNode.HierarchyNode;
+                Node selectedNode = ((NodeViewModel)SelectedNode).HierarchyNode;
 
                 Node newNode = CreateNewNodeForAddition();
 
                 NodeViewModel newTreeNodeViewModel = new NodeViewModel(_metadataReader,
-                                                                           _specIfDataReader,
-                                                                           _specIfDataWriter,
-                                                                           newNode);
+                                                                       _specIfDataReader,
+                                                                       _specIfDataWriter,
+                                                                       this,
+                                                                       newNode);
 
-                newTreeNodeViewModel.EditorViewModel = this;
+                //newTreeNodeViewModel.EditorViewModel = this;
 
                 if (EditType == NEW_CHILD)
                 {
@@ -326,7 +389,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                         NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
-                        if ((SelectedNode.Index + 1) == SelectedNode.HierarchyNode.Nodes.Count)
+                        if ((SelectedNode.Index + 1) == ((NodeViewModel)SelectedNode).HierarchyNode.Nodes.Count)
                         {
                             parentViewModel.HierarchyNode.Nodes.Add(newNode);
 
@@ -429,7 +492,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void ExecuteMoveNodeDown()
         {
-            if(SelectedNode != null && SelectedNode.Parent != null)
+            if (SelectedNode != null && SelectedNode.Parent != null)
             {
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
@@ -437,14 +500,14 @@ namespace MDD4All.SpecIF.ViewModels
 
                 int currentIndex = SelectedNode.Index;
 
-                if(SelectedNode.Index < childCount - 1)
+                if (SelectedNode.Index < childCount - 1)
                 {
                     parentViewModel.Children.RemoveAt(currentIndex);
                     parentViewModel.Children.Insert(currentIndex + 1, SelectedNode);
 
                     NodeViewModel newSibling = parentViewModel.Children[currentIndex] as NodeViewModel;
 
-                    _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSibling.HierarchyNode.ID);
+                    _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSibling.HierarchyNode.ID);
 
                     StateChanged = true;
                 }
@@ -468,15 +531,15 @@ namespace MDD4All.SpecIF.ViewModels
 
                     string newSiblingId = null;
 
-                    if(currentIndex - 1 > 0)
+                    if (currentIndex - 1 > 0)
                     {
                         NodeViewModel newSibling = parentViewModel.Children[currentIndex - 2] as NodeViewModel;
-                        
+
                         newSiblingId = newSibling.HierarchyNode.ID;
                     }
-                    
 
-                    _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSiblingId);
+
+                    _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSiblingId);
 
                     StateChanged = true;
                 }
@@ -495,7 +558,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 string siblingID = null;
                 int newIndex = 0;
-                if(newParent.Children.Count > 0)
+                if (newParent.Children.Count > 0)
                 {
                     NodeViewModel newSibling = newParent.Children[newParent.Children.Count - 1] as NodeViewModel;
                     siblingID = newSibling.HierarchyNode.ID;
@@ -508,7 +571,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 newParent.IsExpanded = true;
 
-                _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, newParent.HierarchyNode.ID, siblingID);
+                _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, newParent.HierarchyNode.ID, siblingID);
 
                 StateChanged = true;
             }
@@ -528,7 +591,7 @@ namespace MDD4All.SpecIF.ViewModels
                 parentViewModel.Parent.Children.Insert(parentIndex + 1, SelectedNode);
                 SelectedNode.Parent = parentViewModel.Parent;
 
-                _specIfDataWriter.MoveNode(SelectedNode.HierarchyNode.ID, ((NodeViewModel)parentViewModel.Parent).HierarchyNode.ID, parentViewModel.HierarchyNode.ID);
+                _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, ((NodeViewModel)parentViewModel.Parent).HierarchyNode.ID, parentViewModel.HierarchyNode.ID);
 
                 StateChanged = true;
             }
@@ -559,7 +622,7 @@ namespace MDD4All.SpecIF.ViewModels
             bool stateChanged = false;
 
             ITreeNode currentNode = SelectedNode.Parent;
-            while(currentNode != null)
+            while (currentNode != null)
             {
                 if (currentNode.IsExpanded == false)
                 {
@@ -571,6 +634,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             //StateChanged = stateChanged;
         }
-        
+
+
     }
 }

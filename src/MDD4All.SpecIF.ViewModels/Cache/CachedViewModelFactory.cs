@@ -1,13 +1,15 @@
 ﻿using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace MDD4All.SpecIF.ViewModels.Cache
 {
     public class CachedViewModelFactory
     {
-        private static Dictionary<Key, ResourceViewModel> _resourceViewModelCache = new Dictionary<Key, ResourceViewModel>();
-        private static Dictionary<Key, List<StatementViewModel>> _statementViewModelCache = new Dictionary<Key, List<StatementViewModel>>();
+        private static ConcurrentDictionary<Key, ResourceViewModel> _resourceViewModelCache = new ConcurrentDictionary<Key, ResourceViewModel>();
+        private static ConcurrentDictionary<Key, List<StatementViewModel>> _statementViewModelCache = new ConcurrentDictionary<Key, List<StatementViewModel>>();
 
         public static ResourceViewModel GetResourceViewModel(Key key,
                                                              ISpecIfMetadataReader metadataReader,
@@ -31,12 +33,13 @@ namespace MDD4All.SpecIF.ViewModels.Cache
                                                                                 dataWriter,
                                                                                 resource);
 
-                    _resourceViewModelCache.Add(new Key(resource.ID, resource.Revision), resourceViewModel);
+                    _resourceViewModelCache.TryAdd(new Key(resource.ID, resource.Revision), resourceViewModel);
 
                     result = resourceViewModel;
                 }
 
             }
+            
 
             return result;
         }
@@ -68,7 +71,7 @@ namespace MDD4All.SpecIF.ViewModels.Cache
 
                         viewModels.Add(resourceViewModel);
                     }
-                    _statementViewModelCache.Add(resourceKey, viewModels);
+                    _statementViewModelCache.TryAdd(resourceKey, viewModels);
 
                     result = viewModels;
                 }

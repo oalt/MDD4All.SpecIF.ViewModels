@@ -52,9 +52,7 @@ namespace MDD4All.SpecIF.ViewModels
                                  ISpecIfDataWriter dataWriter,
                                  string resourceId) : this(metadataReader, dataReader, dataWriter)
         {
-            _resource = _specIfDataReader.GetResourceByKey(
-                new Key(resourceId)
-                );
+            _resource = _specIfDataReader.GetResourceByKey(new Key(resourceId));
             //InitializeStatements();
         }
 
@@ -272,13 +270,15 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "";
 
-                StatementViewModel typeStatement = OutgoingStatements.Find(statement => statement.Type == "rdf:type");
-
-                if (typeStatement != null)
+                if (OutgoingStatements != null)
                 {
-                    result = typeStatement.ObjectResource.Title;
-                }
+                    StatementViewModel typeStatement = OutgoingStatements.Find(statement => statement.Type == "rdf:type");
 
+                    if (typeStatement != null)
+                    {
+                        result = typeStatement.ObjectResource.Title;
+                    }
+                }
                 return result;
             }
         }
@@ -617,27 +617,27 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public List<NodeViewModel> HierarchiesForResource
-        {
-            get
-            {
-                List<NodeViewModel> result = new List<NodeViewModel>();
+        //public List<NodeViewModel> HierarchiesForResource
+        //{
+        //    get
+        //    {
+        //        List<NodeViewModel> result = new List<NodeViewModel>();
 
-                if (_resource != null)
-                {
-                    List<Node> hierarchyRoots = _specIfDataReader.GetContainingHierarchyRoots(new Key(_resource.ID, _resource.Revision));
+        //        if (_resource != null)
+        //        {
+        //            List<Node> hierarchyRoots = _specIfDataReader.GetContainingHierarchyRoots(new Key(_resource.ID, _resource.Revision));
 
-                    foreach (Node node in hierarchyRoots)
-                    {
-                        NodeViewModel resourceViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, node);
+        //            foreach (Node node in hierarchyRoots)
+        //            {
+        //                NodeViewModel resourceViewModel = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, node);
 
-                        result.Add(resourceViewModel);
-                    }
-                }
+        //                result.Add(resourceViewModel);
+        //            }
+        //        }
 
-                return result;
-            }
-        }
+        //        return result;
+        //    }
+        //}
 
         public List<StatementViewModel> Statements
         {
@@ -662,7 +662,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (_incomingStatements == null)
                 {
-                    InitializeStatements();
+                    //InitializeStatements();
                 }
 
                 return _incomingStatements;
@@ -679,7 +679,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (_outgoingStatements == null)
                 {
-                    InitializeStatements();
+                    //InitializeStatements();
                 }
 
                 return _outgoingStatements;
@@ -693,7 +693,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             List<StatementViewModel> allStatements = CachedViewModelFactory.GetStatementViewModels(Key,
                                                                                                    _metadataReader,
-                                                                                                   _specIfDataReader, 
+                                                                                                   _specIfDataReader,
                                                                                                    _specIfDataWriter);
 
             _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
@@ -727,7 +727,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 if (_statementGraph == null)
                 {
-                    InitailizeStatementGraph();
+                    //InitailizeStatementGraph();
                 }
                 return _statementGraph;
             }
@@ -752,7 +752,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             foreach (StatementViewModel incommingStatement in IncomingStatements)
             {
-                if(!incommingStatement.IsLoop)
+                if (!incommingStatement.IsLoop)
                 {
                     Vis.Node node = new Vis.Node(incommingStatement.SubjectResource.Key.ToString(), CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
                     node.Font = new Vis.NodeFontOption
@@ -762,7 +762,7 @@ namespace MDD4All.SpecIF.ViewModels
                     statementNodes.Add(node);
 
                     Vis.Edge edge = new Vis.Edge(incommingStatement.SubjectResource.Key.ToString(), Key.ToString());
-                    
+
                     edge.Arrows = new Vis.Arrows()
                     {
                         To = new Vis.ArrowsOptions
@@ -807,7 +807,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             _statementGraph.Nodes = statementNodes;
             _statementGraph.Edges = statementEdges;
-            
+
         }
 
         public Vis.NetworkOptions StatementGraphOptions
@@ -839,7 +839,7 @@ namespace MDD4All.SpecIF.ViewModels
                     Physics = new Vis.PhysicsOptions
                     {
                         //Enabled = false,
-                        HierarchicalRepulsion = new Vis.HierarchicalRepulsionOption 
+                        HierarchicalRepulsion = new Vis.HierarchicalRepulsionOption
                         {
                             AvoidOverlap = 1
                         }
@@ -867,7 +867,7 @@ namespace MDD4All.SpecIF.ViewModels
             //}
             //else
             //{
-                result += "[" + resourceViewModel.Type + "]\r\n";
+            result += "[" + resourceViewModel.Type + "]\r\n";
             //}
 
             if (!string.IsNullOrEmpty(resourceViewModel.Stereotype))

@@ -37,6 +37,7 @@ namespace MDD4All.SpecIF.ViewModels
                 NodeViewModel hierarchyViewModel = new NodeViewModel(_metadataReader,
                                                                                _dataReader,
                                                                                _dataWriter,
+                                                                               null,
                                                                                node);
                 Hierarchies.Add(hierarchyViewModel);
             }
