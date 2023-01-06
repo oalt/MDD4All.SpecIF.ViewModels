@@ -2,7 +2,6 @@
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
 namespace MDD4All.SpecIF.ViewModels.Cache
 {
@@ -24,6 +23,7 @@ namespace MDD4All.SpecIF.ViewModels.Cache
             }
             else
             {
+                
                 Resource resource = dataReader.GetResourceByKey(key);
 
                 if(resource != null)
@@ -45,9 +45,9 @@ namespace MDD4All.SpecIF.ViewModels.Cache
         }
 
         public static List<StatementViewModel> GetStatementViewModels(Key resourceKey,
-                                                               ISpecIfMetadataReader metadataReader,
-                                                               ISpecIfDataReader dataReader,
-                                                               ISpecIfDataWriter dataWriter)
+                                                                      ISpecIfMetadataReader metadataReader,
+                                                                      ISpecIfDataReader dataReader,
+                                                                      ISpecIfDataWriter dataWriter)
         {
             List<StatementViewModel> result = null;
 
@@ -65,9 +65,9 @@ namespace MDD4All.SpecIF.ViewModels.Cache
                     foreach (Statement statement in statements)
                     {
                         StatementViewModel resourceViewModel = new StatementViewModel(metadataReader,
-                                                                                    dataReader,
-                                                                                    dataWriter,
-                                                                                    statement);
+                                                                                      dataReader,
+                                                                                      dataWriter,
+                                                                                      statement);
 
                         viewModels.Add(resourceViewModel);
                     }

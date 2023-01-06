@@ -7,6 +7,7 @@ using Newtonsoft.Json;
 using MDD4All.SpecIF.ViewModels.Revisioning;
 using Vis = VisNetwork.Blazor.Models;
 using MDD4All.SpecIF.ViewModels.Cache;
+using System.Threading.Tasks;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -34,7 +35,7 @@ namespace MDD4All.SpecIF.ViewModels
             _node = node;
 
             _resource = _specIfDataReader.GetResourceByKey(node.ResourceReference);
-            //InitializeStatements();
+            Task.Run(() => InitializeStatementsAsync());
 
         }
 
@@ -44,7 +45,7 @@ namespace MDD4All.SpecIF.ViewModels
                                  Resource resource) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = resource;
-            //InitializeStatements();
+            Task.Run(() => InitializeStatementsAsync());
         }
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
@@ -53,7 +54,7 @@ namespace MDD4All.SpecIF.ViewModels
                                  string resourceId) : this(metadataReader, dataReader, dataWriter)
         {
             _resource = _specIfDataReader.GetResourceByKey(new Key(resourceId));
-            //InitializeStatements();
+            Task.Run(() => InitializeStatementsAsync());
         }
 
         public ResourceViewModel(ISpecIfMetadataReader metadataReader,
@@ -65,7 +66,7 @@ namespace MDD4All.SpecIF.ViewModels
             _resource = _specIfDataReader.GetResourceByKey(
                 new Key() { ID = resourceId, Revision = revision }
                 );
-            //InitializeStatements();
+            Task.Run(() => InitializeStatementsAsync());
 
         }
 
@@ -639,10 +640,30 @@ namespace MDD4All.SpecIF.ViewModels
         //    }
         //}
 
+
+
+        public bool StatementsInitialized
+        {
+            get
+            {
+                return !(_incomingStatements == null && _outgoingStatements == null);
+            }
+
+            set
+            {
+                RaisePropertyChanged("StatementsInitialized");
+            }
+        }
+
+
         public List<StatementViewModel> Statements
         {
             get
             {
+                if (!StatementsInitialized)
+                {
+                    Task.Run(InitializeStatementsAsync).Wait();
+                }
                 List<StatementViewModel> result = new List<StatementViewModel>();
 
                 result.AddRange(IncomingStatements);
@@ -658,13 +679,6 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                List<StatementViewModel> result = new List<StatementViewModel>();
-
-                if (_incomingStatements == null)
-                {
-                    //InitializeStatements();
-                }
-
                 return _incomingStatements;
             }
         }
@@ -675,47 +689,35 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                List<StatementViewModel> result = new List<StatementViewModel>();
-
-                if (_outgoingStatements == null)
-                {
-                    //InitializeStatements();
-                }
-
                 return _outgoingStatements;
             }
         }
 
-        private void InitializeStatements()
+        private async Task InitializeStatementsAsync()
         {
-            _incomingStatements = new List<StatementViewModel>();
-            _outgoingStatements = new List<StatementViewModel>();
+            // as singleton
+            if (_incomingStatements == null || _outgoingStatements == null)
+            {
+                _incomingStatements = new List<StatementViewModel>();
+                _outgoingStatements = new List<StatementViewModel>();
 
-            List<StatementViewModel> allStatements = CachedViewModelFactory.GetStatementViewModels(Key,
-                                                                                                   _metadataReader,
-                                                                                                   _specIfDataReader,
-                                                                                                   _specIfDataWriter);
 
-            _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
-            _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
+                List<StatementViewModel> allStatements = new List<StatementViewModel>();
 
-            //foreach (StatementViewModel inStatement in allStatements.FindAll(stm => stm..ID == _resource.ID))
-            //{
-            //    StatementViewModel model = CachedViewModelFactory.GetStatementViewModel(new Key(inStatement.ID, inStatement.Revision), _metadataReader,
-            //                                                 _specIfDataReader, _specIfDataWriter);
+                await Task.Run(() =>
+                {
+                    allStatements = CachedViewModelFactory.GetStatementViewModels(Key,
+                                                                                  _metadataReader,
+                                                                                  _specIfDataReader,
+                                                                                  _specIfDataWriter);
 
-            //    _incomingStatements.Add(model);
-            //}
+                });
 
-            //foreach (Statement outStatement in allStatements.FindAll(stm => stm.StatementSubject.ID == _resource.ID))
-            //{
+                _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
+                _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
 
-            //    StatementViewModel model = CachedViewModelFactory.GetStatementViewModel(new Key(outStatement.ID, outStatement.Revision), 
-            //                                                                            _metadataReader,
-            //                                                                            _specIfDataReader, _specIfDataWriter);
-
-            //    _outgoingStatements.Add(model);
-            //}
+                StatementsInitialized = true;
+            }
         }
 
 
@@ -725,9 +727,9 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                if (_statementGraph == null)
+                if (_statementGraph == null && StatementsInitialized)
                 {
-                    //InitailizeStatementGraph();
+                    InitailizeStatementGraph();
                 }
                 return _statementGraph;
             }
@@ -754,7 +756,9 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 if (!incommingStatement.IsLoop)
                 {
-                    Vis.Node node = new Vis.Node(incommingStatement.SubjectResource.Key.ToString(), CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
+                    Vis.Node node = new Vis.Node(incommingStatement.SubjectResource.Key.ToString(),
+                                                 CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
+
                     node.Font = new Vis.NodeFontOption
                     {
                         Multi = true
@@ -781,7 +785,11 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 if (!outgoingStatement.IsLoop)
                 {
-                    Vis.Node node = new Vis.Node(outgoingStatement.ObjectResource.Key.ToString(), CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource), 3, "box");
+                    Vis.Node node = new Vis.Node(outgoingStatement.ObjectResource.Key.ToString(), 
+                                                 CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource), 
+                                                 3, 
+                                                 "box");
+
                     node.Font = new Vis.NodeFontOption
                     {
                         Multi = true
@@ -802,6 +810,7 @@ namespace MDD4All.SpecIF.ViewModels
                     statementEdges.Add(edge);
                 }
             }
+
 
             _statementGraph = new Vis.NetworkData();
 

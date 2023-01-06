@@ -49,39 +49,14 @@ namespace MDD4All.SpecIF.ViewModels
         private void InitializeSubjectAndObject()
         {
             _subjectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementSubject,
-                MetadataReader, DataReader, DataWriter);
-
-            //if (subjectResource != null)
-            //{
-            //    _subjectResource = new ResourceViewModel(MetadataReader, DataReader, DataWriter, subjectResource);
-            //}
-            //else
-            //{
-            //    Statement subjectStatement = DataReader.GetStatementByKey(_statement.StatementSubject);
-            //    if (subjectStatement != null)
-            //    {
-            //        _subjectResource = new StatementViewModel(MetadataReader, DataReader, DataWriter, subjectStatement);
-            //    }
-            //}
+                                                                           MetadataReader, 
+                                                                           DataReader, 
+                                                                           DataWriter);
 
             _objectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementObject,
-                MetadataReader, DataReader, DataWriter);
-
-            //Resource objectResource = DataReader.GetResourceByKey(_statement.StatementObject);
-
-            //if (objectResource != null)
-            //{
-            //    _objectResource = new ResourceViewModel(MetadataReader, DataReader, DataWriter, objectResource);
-            //}
-            //else
-            //{
-            //    Statement objectStatement = DataReader.GetStatementByKey(_statement.StatementObject);
-            //    if (objectStatement != null)
-            //    {
-            //        _objectResource = new StatementViewModel(MetadataReader, DataReader, DataWriter, objectStatement);
-            //    }
-            //}
-
+                                                                          MetadataReader, 
+                                                                          DataReader, 
+                                                                          DataWriter);
         }
 
         public string StatementID

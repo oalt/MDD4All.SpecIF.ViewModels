@@ -58,10 +58,6 @@ namespace MDD4All.SpecIF.ViewModels
         private void InitializeReferencedResource(Key key)
         {
             Task.Run(() => InitializeReferencedResourceAsync(key));
-
-
-
-
         }
 
 
