@@ -176,6 +176,20 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string Priority
+        {
+            get
+            {
+                string result = "";
+                PropertyViewModel propertyViewModel = Properties.Find(property => property.Title == "SpecIF:Priority");
+                if(propertyViewModel != null)
+                {
+                    result = propertyViewModel.EnumerationValue;
+                }
+                return result;
+            }
+        }
+
         public string Title
         {
             get
