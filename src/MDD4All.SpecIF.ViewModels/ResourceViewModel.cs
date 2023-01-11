@@ -754,6 +754,13 @@ namespace MDD4All.SpecIF.ViewModels
             List<Vis.Node> statementNodes = new List<Vis.Node>();
             List<Vis.Edge> statementEdges = new List<Vis.Edge>();
 
+            HashSet<string> nodeIds = new HashSet<string>();
+
+            if(!nodeIds.Contains(Key.ToString()))
+            {
+                nodeIds.Add(Key.ToString());
+            }
+
             Vis.Node resourceNode = new Vis.Node(Key.ToString(), CalculateLabelForStatementGraphNode(this), 2, "box");
             resourceNode.Font = new Vis.NodeFontOption
             {
@@ -770,28 +777,36 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 if (!incommingStatement.IsLoop)
                 {
-                    Vis.Node node = new Vis.Node(incommingStatement.SubjectResource.Key.ToString(),
-                                                 CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
-
-                    node.Font = new Vis.NodeFontOption
+                    string id = incommingStatement.SubjectResource.Key.ToString();
+                    if (!nodeIds.Contains(id))
                     {
-                        Multi = true
-                    };
-                    statementNodes.Add(node);
+                        nodeIds.Add(id);
 
-                    Vis.Edge edge = new Vis.Edge(incommingStatement.SubjectResource.Key.ToString(), Key.ToString());
+                        Vis.Node node = new Vis.Node(id,
+                                                     CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
 
-                    edge.Arrows = new Vis.Arrows()
-                    {
-                        To = new Vis.ArrowsOptions
+                        node.Font = new Vis.NodeFontOption
                         {
-                            Enabled = true,
-                            Type = "arrow"
-                        }
-                    };
-                    edge.Label = incommingStatement.Type;
+                            Multi = true
+                        };
+                        statementNodes.Add(node);
 
-                    statementEdges.Add(edge);
+
+
+                        Vis.Edge edge = new Vis.Edge(id, Key.ToString());
+
+                        edge.Arrows = new Vis.Arrows()
+                        {
+                            To = new Vis.ArrowsOptions
+                            {
+                                Enabled = true,
+                                Type = "arrow"
+                            }
+                        };
+                        edge.Label = incommingStatement.Type;
+
+                        statementEdges.Add(edge);
+                    }
                 }
             }
 
@@ -799,29 +814,36 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 if (!outgoingStatement.IsLoop)
                 {
-                    Vis.Node node = new Vis.Node(outgoingStatement.ObjectResource.Key.ToString(), 
-                                                 CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource), 
-                                                 3, 
+                    string id = outgoingStatement.ObjectResource.Key.ToString();
+                    if (!nodeIds.Contains(id))
+                    {
+                        nodeIds.Add(id);
+
+                        Vis.Node node = new Vis.Node(id,
+                                                 CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource),
+                                                 3,
                                                  "box");
 
-                    node.Font = new Vis.NodeFontOption
-                    {
-                        Multi = true
-                    };
-                    statementNodes.Add(node);
-
-                    Vis.Edge edge = new Vis.Edge(Key.ToString(), outgoingStatement.ObjectResource.Key.ToString());
-                    edge.Arrows = new Vis.Arrows()
-                    {
-                        To = new Vis.ArrowsOptions
+                        node.Font = new Vis.NodeFontOption
                         {
-                            Enabled = true,
-                            Type = "arrow"
-                        }
-                    };
-                    edge.Label = outgoingStatement.Type;
+                            Multi = true
+                        };
+                        statementNodes.Add(node);
 
-                    statementEdges.Add(edge);
+
+                        Vis.Edge edge = new Vis.Edge(Key.ToString(), id);
+                        edge.Arrows = new Vis.Arrows()
+                        {
+                            To = new Vis.ArrowsOptions
+                            {
+                                Enabled = true,
+                                Type = "arrow"
+                            }
+                        };
+                        edge.Label = outgoingStatement.Type;
+
+                        statementEdges.Add(edge);
+                    }
                 }
             }
 
