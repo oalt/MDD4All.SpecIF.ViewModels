@@ -26,6 +26,39 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        private bool _isConnecting = false;
+
+        public bool IsConnecting 
+        {
+            get
+            { 
+                return _isConnecting;
+            } 
+            
+            set
+            {
+                _isConnecting = value;
+                RaisePropertyChanged("IsConnecting");
+            }
+        }
+
+        private string _statusMessageKey = "";
+
+        public string StatusMessageKey
+        {
+            get 
+            { 
+                return _statusMessageKey; 
+            }
+
+            set
+            {
+                _statusMessageKey = value;
+                RaisePropertyChanged("StatusMessageKey");
+            }
+        }
+
+
         public Action ConnectAction { get; set; }
 
         public ISpecIfDataProviderFactory SpecIfDataProviderFactory { get; set; }
