@@ -151,6 +151,18 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string ClassRevision
+        {
+            get
+            {
+                string result = "";
+
+                result = Resource.GetClassRevision(_metadataReader);
+
+                return result;
+            }
+        }
+
         private Node _node;
 
         public Node Node
@@ -626,7 +638,13 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (Resource != null)
                 {
-                    result = JsonConvert.SerializeObject(Resource, Formatting.Indented);
+                    JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings()
+                    {
+                        Formatting = Formatting.Indented,
+                        NullValueHandling = NullValueHandling.Ignore
+                    };
+
+                    result = JsonConvert.SerializeObject(Resource, jsonSerializerSettings);
                 }
                 return result;
             }
