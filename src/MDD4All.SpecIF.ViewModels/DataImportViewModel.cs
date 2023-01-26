@@ -2,6 +2,7 @@
 using GalaSoft.MvvmLight.Command;
 using MDD4All.FileAccess.Contracts;
 using MDD4All.SpecIF.Converters;
+using MDD4All.SpecIF.DataProvider.Base.Cache;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using MDD4All.SpecIF.ViewModels.Models;
 using Newtonsoft.Json;
@@ -16,16 +17,19 @@ namespace MDD4All.SpecIF.ViewModels
     public class DataImportViewModel : ViewModelBase
     {
         private IHttpClientFactory _httpClientFactory;
+        private ISpecIfMetadataReader _metadataReader;
         private ISpecIfMetadataWriter _metadataWriter;
         private ISpecIfDataWriter _dataWriter;
         private IFileLoader _fileLoader;
 
         public DataImportViewModel(IHttpClientFactory httpClientFactory,
+                                   ISpecIfMetadataReader metadataReader,
                                    ISpecIfMetadataWriter metadataWriter,
                                    ISpecIfDataWriter dataWriter,
                                    IFileLoader fileLoader)
         {
             _httpClientFactory = httpClientFactory;
+            _metadataReader = metadataReader;
             _metadataWriter = metadataWriter;
             _dataWriter = dataWriter;
             _fileLoader = fileLoader;
@@ -168,6 +172,8 @@ namespace MDD4All.SpecIF.ViewModels
                             ProgressMessageKey = "Message.ImportingData";
                             specIfConverter.ConvertAll(specIF, _dataWriter, _metadataWriter, OverrideExistingData);
 
+                            RefreshMetadataCache();
+
                             SuccessMessageKey = "Message.ImportSuccess";
                         }
                         else
@@ -227,6 +233,8 @@ namespace MDD4All.SpecIF.ViewModels
                                 ProgressMessageKey = "Message.ImportingData";
                                 specIfConverter.ConvertAll(specIF, _dataWriter, _metadataWriter, OverrideExistingData);
 
+                                RefreshMetadataCache();
+
                                 SuccessMessageKey = "Message.ImportSuccess";
                             }
                             else
@@ -276,6 +284,16 @@ namespace MDD4All.SpecIF.ViewModels
             SuccessMessageKey = "";
             Exception = null;
 
+        }
+
+        private void RefreshMetadataCache()
+        {
+            if(_metadataReader is CachedSpecIfMetadataReader)
+            {
+                CachedSpecIfMetadataReader cachedSpecIfMetadataReader = _metadataReader as CachedSpecIfMetadataReader;
+
+                cachedSpecIfMetadataReader.ReinitializeCache();
+            }
         }
     }
 }

@@ -541,8 +541,10 @@ namespace MDD4All.SpecIF.ViewModels
 
                         if (property == null)
                         {
-                            propertyViewModel = new PropertyViewModel(MetadataReader, new Key(propertyClass.ID,
-                                                                                              propertyClass.Revision));
+                            propertyViewModel = new PropertyViewModel(MetadataReader, 
+                                                                      new Key(propertyClass.ID,
+                                                                              propertyClass.Revision),
+                                                                      this);
                         }
                         else
                         {

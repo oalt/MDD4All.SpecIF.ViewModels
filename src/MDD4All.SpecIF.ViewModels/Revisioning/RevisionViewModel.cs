@@ -60,7 +60,7 @@ namespace MDD4All.SpecIF.ViewModels.Revisioning
                     propertyDiffViewModel.Title = propertyViewModelOne.Title;
                     propertyDiffViewModel.PropertyRevisionOne = propertyViewModelOne;
 
-                    PropertyViewModel propertyViewModelTwo = resourceTwo.Properties.Find(vmTwo => vmTwo.Property.Class.Equals(propertyViewModelOne.Property.Class));
+                    PropertyViewModel propertyViewModelTwo = resourceTwo.Properties.Find(vmTwo => vmTwo.PropertyClassKey.Equals(propertyViewModelOne.PropertyClassKey));
                     if(propertyViewModelTwo == null)
                     {
                         result.Add(propertyDiffViewModel);

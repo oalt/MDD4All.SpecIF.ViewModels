@@ -11,6 +11,7 @@ namespace MDD4All.SpecIF.ViewModels
     public class PropertyViewModel : ViewModelBase
     {
         private ISpecIfMetadataReader _specIfMetadataReader;
+        private ResourceViewModel _resourceViewModel;
 
         public PropertyViewModel(ISpecIfMetadataReader specIfMetadataReader,
                                  Property property)
@@ -18,20 +19,34 @@ namespace MDD4All.SpecIF.ViewModels
             _specIfMetadataReader = specIfMetadataReader;
             Property = property;
 
+            PropertyClassKey = property.Class;
+
+            PropertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
+
             InitailizeEnumerationOptions();
         }
 
         public PropertyViewModel(ISpecIfMetadataReader specIfMetadataReader,
-                                 Key propertyClass)
+                                 Key propertyClass,
+                                 ResourceViewModel resourceViewModel)
         {
             _specIfMetadataReader = specIfMetadataReader;
+            _resourceViewModel = resourceViewModel;
 
-            Property = new Property(new Key(propertyClass.ID, propertyClass.Revision), "");
+            PropertyClassKey = propertyClass;
 
-            Property.Values = new List<Value>();
+            PropertyClass = _specIfMetadataReader.GetPropertyClassByKey(propertyClass);
         }
 
-        public Property Property { get; set; }
+        public Key PropertyClassKey { get; set; }
+
+        public Property Property
+        {
+            get;
+            set;
+        }
+
+        public PropertyClass PropertyClass { get; set; }
 
         public string Title
         {
@@ -39,7 +54,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "<Unknown>";
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
 
                 if (propertyClass != null)
                 {
@@ -56,15 +71,15 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 bool result = false;
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
 
                 if (propertyClass != null)
                 {
-                    if(propertyClass.Multiple.HasValue)
+                    if (propertyClass.Multiple.HasValue)
                     {
                         result = propertyClass.Multiple.Value;
                     }
-                    
+
                 }
 
                 return result;
@@ -75,36 +90,69 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return Property.GetStringValue(_specIfMetadataReader);
+                string result = "";
+                if (Property != null)
+                {
+                    result = Property.GetStringValue(_specIfMetadataReader);
+                }
+                return result;
             }
+
             set
             {
-                if (DataTypeType == "xs:string")
+                if (value != null)
                 {
-                    Value val = new Value(new MultilanguageText
-                    {
-                        Text = value,
-                        Format = Format
-                    });
 
-                    if (Property.Values.Count > 0)
+                    if (DataTypeType == "xs:string")
                     {
-                        Property.Values[0] = val;
+                        MultilanguageText multilanguageTextValue = new MultilanguageText
+                        {
+                            Text = value,
+                            Format = Format
+                        };
+
+                        if (Property == null)
+                        {
+                            Property = new Property(PropertyClassKey, multilanguageTextValue);
+                            if(_resourceViewModel != null)
+                            {
+                                _resourceViewModel.Resource.Properties.Add(Property);
+                            }
+                        }
+                        else
+                        {
+                            Value val = new Value(multilanguageTextValue);
+                            if (Property.Values.Count > 0)
+                            {
+                                Property.Values[0] = val;
+                            }
+                            else
+                            {
+                                Property.Values.Add(val);
+                            }
+                        }
                     }
                     else
                     {
-                        Property.Values.Add(val);
-                    }
-                }
-                else
-                {
-                    if (Property.Values.Count > 0)
-                    {
-                        Property.Values[0].StringValue = value;
-                    }
-                    else
-                    {
-                        Property.Values.Add(new Value(value));
+                        if (Property == null)
+                        {
+                            Property = new Property(PropertyClassKey, value);
+                            if (_resourceViewModel != null)
+                            {
+                                _resourceViewModel.Resource.Properties.Add(Property);
+                            }
+                        }
+                        else
+                        {
+                            if (Property.Values.Count > 0)
+                            {
+                                Property.Values[0].StringValue = value;
+                            }
+                            else
+                            {
+                                Property.Values.Add(new Value(value));
+                            }
+                        }
                     }
                 }
             }
@@ -122,17 +170,91 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public void SetSingleEnumerationValue(string valueID,
+                                              int index = 0)
+        {
+            if(Property == null)
+            {
+                Property = new Property(PropertyClassKey, new List<Value>());
+                if (_resourceViewModel != null)
+                {
+                    _resourceViewModel.Resource.Properties.Add(Property);
+                }
+            }
+            
+            // Add empty values if the index can not be used in current property structure
+            if (index > Property.Values.Count - 1)
+            {
+                for (int counter = Property.Values.Count; counter <= index; counter++)
+                {
+                    Property.Values.Add(new Value());
+                }
+            }
+
+            Property.Values[index].StringValue = valueID;
+        }
+
+        public void SetMultipleEnumerationValue(List<string> valueIds,
+                                                int index = 0)
+        {
+            if (Property == null)
+            {
+                Property = new Property(PropertyClassKey, new List<Value>());
+                if (_resourceViewModel != null)
+                {
+                    _resourceViewModel.Resource.Properties.Add(Property);
+                }
+            }
+            
+
+            // Add empty values if the index can not be used in current property structure
+            if (index > Property.Values.Count - 1)
+            {
+                for (int counter = Property.Values.Count; counter <= index; counter++)
+                {
+                    Property.Values.Add(new Value());
+                }
+            }
+
+            string multiValue = "";
+
+            if (valueIds.Count > 0)
+            {
+                for (int counter = 0; counter < valueIds.Count; counter++)
+                {
+                    multiValue += valueIds[counter];
+
+                    if (counter < valueIds.Count - 1)
+                    {
+                        multiValue += ",";
+                    }
+                }
+
+
+                Property.Values[index].StringValue = multiValue;
+            }
+            else
+            {
+                Property.Values[index].StringValue = null;
+            }
+        }
+
         public string DurationValue
         {
             get
             {
                 string result = "";
+                
+                string value = Value;
 
-                TimeSpan timeSpan = Value.ToTimeSpan();
-
-                if(timeSpan != null)
+                if (!string.IsNullOrEmpty(value))
                 {
-                    result = timeSpan.ToString();
+                    TimeSpan timeSpan = Value.ToTimeSpan();
+
+                    if (timeSpan != null)
+                    {
+                        result = timeSpan.ToString();
+                    }
                 }
 
 
@@ -154,13 +276,15 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-                
-                List<List<string>> enumerationValues = Property.GetEnumerationValues(_specIfMetadataReader);
-                if (enumerationValues.Count > 0)
+                if (Property != null)
                 {
-                    result = enumerationValues[0][0];
+                    List<List<string>> enumerationValues = Property.GetEnumerationValues(_specIfMetadataReader);
+                    if (enumerationValues.Count > 0)
+                    {
+                        result = enumerationValues[0][0];
+                    }
                 }
-                
+
                 return result;
             }
         }
@@ -171,7 +295,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "";
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
 
                 if (propertyClass != null)
                 {
@@ -188,7 +312,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 DataType result = null;
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
                 if (propertyClass != null)
                 {
                     result = _specIfMetadataReader.GetDataTypeByKey(propertyClass.DataType);
@@ -223,7 +347,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 //string defaultFormat = "plain";
 
-                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(Property.Class);
+                PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
 
                 if (propertyClass != null)
                 {
@@ -273,7 +397,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                 DataType dataType = DataType;
 
-                if(dataType != null && dataType.Enumeration != null && dataType.Enumeration.Count > 0)
+                if (dataType != null && dataType.Enumeration != null && dataType.Enumeration.Count > 0)
                 {
                     result = true;
                 }
@@ -303,11 +427,11 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void InitailizeEnumerationOptions()
         {
-            if(IsEnumeration)
+            if (IsEnumeration)
             {
-                if(DataType.Enumeration != null)
+                if (DataType.Enumeration != null)
                 {
-                    foreach(EnumerationValue enumerationValue in DataType.Enumeration)
+                    foreach (EnumerationValue enumerationValue in DataType.Enumeration)
                     {
                         EnumSelectItem enumSelectItem = new EnumSelectItem
                         {
