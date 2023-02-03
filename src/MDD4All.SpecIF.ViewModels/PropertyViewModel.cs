@@ -36,6 +36,8 @@ namespace MDD4All.SpecIF.ViewModels
             PropertyClassKey = propertyClass;
 
             PropertyClass = _specIfMetadataReader.GetPropertyClassByKey(propertyClass);
+
+            InitailizeEnumerationOptions();
         }
 
         public Key PropertyClassKey { get; set; }
@@ -105,31 +107,15 @@ namespace MDD4All.SpecIF.ViewModels
 
                     if (DataTypeType == "xs:string")
                     {
-                        MultilanguageText multilanguageTextValue = new MultilanguageText
+                        if (Property != null)
                         {
-                            Text = value,
-                            Format = Format
-                        };
-
-                        if (Property == null)
-                        {
-                            Property = new Property(PropertyClassKey, multilanguageTextValue);
-                            if(_resourceViewModel != null)
-                            {
-                                _resourceViewModel.Resource.Properties.Add(Property);
-                            }
+                            Property.SetSingleStringValue(value);
                         }
                         else
                         {
-                            Value val = new Value(multilanguageTextValue);
-                            if (Property.Values.Count > 0)
-                            {
-                                Property.Values[0] = val;
-                            }
-                            else
-                            {
-                                Property.Values.Add(val);
-                            }
+                            Property = new Property();
+                            Property.Class = PropertyClassKey;
+                            Property.SetSingleStringValue(value);
                         }
                     }
                     else
@@ -144,14 +130,7 @@ namespace MDD4All.SpecIF.ViewModels
                         }
                         else
                         {
-                            if (Property.Values.Count > 0)
-                            {
-                                Property.Values[0].StringValue = value;
-                            }
-                            else
-                            {
-                                Property.Values.Add(new Value(value));
-                            }
+                            Property.SetSingleNonStringValue(value);
                         }
                     }
                 }
@@ -173,7 +152,7 @@ namespace MDD4All.SpecIF.ViewModels
         public void SetSingleEnumerationValue(string valueID,
                                               int index = 0)
         {
-            if(Property == null)
+            if (Property == null)
             {
                 Property = new Property(PropertyClassKey, new List<Value>());
                 if (_resourceViewModel != null)
@@ -181,7 +160,7 @@ namespace MDD4All.SpecIF.ViewModels
                     _resourceViewModel.Resource.Properties.Add(Property);
                 }
             }
-            
+
             // Add empty values if the index can not be used in current property structure
             if (index > Property.Values.Count - 1)
             {
@@ -205,7 +184,7 @@ namespace MDD4All.SpecIF.ViewModels
                     _resourceViewModel.Resource.Properties.Add(Property);
                 }
             }
-            
+
 
             // Add empty values if the index can not be used in current property structure
             if (index > Property.Values.Count - 1)
@@ -244,7 +223,7 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-                
+
                 string value = Value;
 
                 if (!string.IsNullOrEmpty(value))
@@ -262,6 +241,99 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string GetStringValue(string languageCode)
+        {
+            string result = "";
+            if (Property != null)
+            {
+                result = Property.GetStringValue(_specIfMetadataReader, languageCode);
+            }
+            return result;
+        }
+
+        private string _primaryLanguage = "en";
+
+        public string PrimaryLanguage
+        {
+            get { return _primaryLanguage; }
+            set { _primaryLanguage = value; }
+        }
+
+        private string _secondaryLanguage = "de";
+
+        public string SecondaryLanguage
+        {
+            get { return _secondaryLanguage; }
+            set { _secondaryLanguage = value; }
+        }
+
+        public string PrimaryLanguageStringValue 
+        {
+            get
+            {
+                string result = "";
+                if (Property != null)
+                {
+                    result = Property.GetStringValue(_specIfMetadataReader, PrimaryLanguage);
+                }
+                return result;
+            }
+
+            set
+            {
+                if (value != null)
+                {
+                    if (Property != null)
+                    {
+                        Property.SetSingleStringValue(value, PrimaryLanguage, PropertyClass.Format);
+                    }
+                    else
+                    {
+                        Property = new Property();
+                        Property.Class = PropertyClassKey;
+                        Property.SetSingleStringValue(value, PrimaryLanguage, PropertyClass.Format);
+                        if (_resourceViewModel != null)
+                        {
+                            _resourceViewModel.Resource.Properties.Add(Property);
+                        }
+                    }
+                }
+            }
+        }
+
+        public string SecondaryLanguageStringValue
+        {
+            get
+            {
+                string result = "";
+                if (Property != null)
+                {
+                    result = Property.GetStringValue(_specIfMetadataReader, SecondaryLanguage);
+                }
+                return result;
+            }
+
+            set
+            {
+                if (value != null)
+                {
+                    if (Property != null)
+                    {
+                        Property.SetSingleStringValue(value, SecondaryLanguage, PropertyClass.Format);
+                    }
+                    else
+                    {
+                        Property = new Property();
+                        Property.Class = PropertyClassKey;
+                        Property.SetSingleStringValue(value, SecondaryLanguage, PropertyClass.Format);
+                        if (_resourceViewModel != null)
+                        {
+                            _resourceViewModel.Resource.Properties.Add(Property);
+                        }
+                    }
+                }
+            }
+        }
 
         public List<List<string>> EnumerationValues
         {
@@ -445,6 +517,19 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+
+        public bool IsStringDataType
+        {
+            get
+            {
+                bool result = false;
+                if (DataTypeType == "xs:string")
+                {
+                    result = true;
+                }
+                return result;
+            }
+        }
 
     }
 }

@@ -172,7 +172,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        
+
 
 
         private ObservableCollection<NodeViewModel> _rootNodes = new ObservableCollection<NodeViewModel>();
@@ -257,6 +257,61 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public bool IsMultilanguageEnabled
+        {
+            get
+            {
+                bool result = false;
+
+                if (_tree != null && _tree is HierarchyViewModel)
+                {
+                    HierarchyViewModel parentViewModel = _tree as HierarchyViewModel;
+
+                    result = parentViewModel.IsMultilanguageEnabled;
+                }
+                return result;
+            }
+
+        }
+
+
+
+        public string PrimaryLanguage
+        {
+            get
+            {
+                string result = "en";
+
+                if (_tree != null && _tree is HierarchyViewModel)
+                {
+                    HierarchyViewModel parentViewModel = _tree as HierarchyViewModel;
+
+                    result = parentViewModel.PrimaryLanguage;
+                }
+
+                return result;
+            }
+
+        }
+
+        public string SecondaryLanguage
+        {
+            get
+            {
+                string result = "de";
+
+                if (_tree != null && _tree is HierarchyViewModel)
+                {
+                    HierarchyViewModel parentViewModel = _tree as HierarchyViewModel;
+
+                    result = parentViewModel.SecondaryLanguage;
+                }
+
+                return result;
+            }
+
+        }
+
         public string Title
         {
             get
@@ -269,6 +324,19 @@ namespace MDD4All.SpecIF.ViewModels
                 }
                 return result;
             }
+        }
+
+        public string GetTitle(string language = "en")
+        {
+
+            string result = "";
+            if (ReferencedResource != null)
+            {
+                result = ReferencedResource.GetTitle(language);
+
+            }
+            return result;
+
         }
 
         public string TreeNodeText

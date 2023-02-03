@@ -194,7 +194,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "";
                 PropertyViewModel propertyViewModel = Properties.Find(property => property.Title == "SpecIF:Priority");
-                if(propertyViewModel != null)
+                if (propertyViewModel != null)
                 {
                     result = propertyViewModel.EnumerationValue;
                 }
@@ -217,6 +217,20 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public string GetTitle(string language = "en")
+        {
+
+            string result = "";
+
+            if (_resource != null && _resource.Properties != null)
+            {
+                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title")?.GetStringValue(_metadataReader, language);
+            }
+
+            return result;
+
+        }
+
         public string Description
         {
             get
@@ -235,6 +249,20 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 Resource.SetPropertyValue("dcterms:description", value, _metadataReader, TextFormat.XHTML);
             }
+        }
+
+        public string GetDescription(string language = "en")
+        {
+
+            string result = "";
+
+            if (_resource != null && _resource.Properties != null)
+            {
+                result = Resource.GetPropertyValue("dcterms:description", _metadataReader, language);
+            }
+
+            return result;
+
         }
 
         public string Diagram
@@ -541,7 +569,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                         if (property == null)
                         {
-                            propertyViewModel = new PropertyViewModel(MetadataReader, 
+                            propertyViewModel = new PropertyViewModel(MetadataReader,
                                                                       new Key(propertyClass.ID,
                                                                               propertyClass.Revision),
                                                                       this);
@@ -776,7 +804,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             HashSet<string> nodeIds = new HashSet<string>();
 
-            if(!nodeIds.Contains(Key.ToString()))
+            if (!nodeIds.Contains(Key.ToString()))
             {
                 nodeIds.Add(Key.ToString());
             }

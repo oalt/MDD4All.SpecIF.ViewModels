@@ -175,6 +175,61 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        private bool _isMultilanguageEnabled = false;
+
+        public bool IsMultilanguageEnabled
+        {
+            get { return _isMultilanguageEnabled; }
+            set
+            {
+                _isMultilanguageEnabled = value;
+                RaisePropertyChanged("IsMultilanguageEnabled");
+            }
+        }
+
+        private string _primaryLanguage = "en";
+
+        public string PrimaryLanguage
+        {
+            get
+            {
+                return _primaryLanguage;
+            }
+            set
+            {
+                _primaryLanguage = value;
+                RaisePropertyChanged("PrimaryLanguage");
+            }
+        }
+
+        private string _secondaryLanguage = "de";
+
+        public string SecondaryLanguage
+        {
+            get
+            {
+                return _secondaryLanguage;
+            }
+            set
+            {
+                _secondaryLanguage = value;
+                RaisePropertyChanged("SecondaryLanguage");
+            }
+        }
+    
+        public List<string> Languages 
+        { 
+            get
+            {
+                List<string> result = new List<string>();
+
+                result.Add("en");
+                result.Add("de");
+                result.Add("zh");
+
+                return result;
+            }
+        }
 
         public bool StateChanged
         {
