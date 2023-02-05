@@ -80,5 +80,11 @@ namespace MDD4All.SpecIF.ViewModels.Cache
 
             return result;
         }
+
+        public static void InvalidateStatementsForResource(Key resourceKey)
+        {
+            List<StatementViewModel> viewModels;
+            _statementViewModelCache.TryRemove(resourceKey, out viewModels);
+        }
     }
 }

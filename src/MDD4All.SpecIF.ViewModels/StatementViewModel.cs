@@ -1,6 +1,7 @@
 ﻿using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using MDD4All.SpecIF.ViewModels.Cache;
+using System.Collections.Generic;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -103,5 +104,41 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public override List<PropertyClass> PropertyClasses
+        {
+            get
+            {
+                List<PropertyClass> result = new List<PropertyClass>();
+
+                StatementClass resourceClass = MetadataReader.GetStatementClassByKey(Resource.Class);
+
+                if (resourceClass != null)
+                {
+                    GetPropertyClassesFromParentStatementClassRecursively(resourceClass, result);
+                }
+
+                return result;
+            }
+        }
+
+        private void GetPropertyClassesFromParentStatementClassRecursively(StatementClass currentClass, List<PropertyClass> result)
+        {
+            if (currentClass.PropertyClasses != null)
+            {
+                foreach (Key propertyClassKey in currentClass.PropertyClasses)
+                {
+                    PropertyClass propertyClass = MetadataReader.GetPropertyClassByKey(propertyClassKey);
+
+                    result.Add(propertyClass);
+                }
+
+                if (currentClass.Extends != null)
+                {
+                    StatementClass parentClass = MetadataReader.GetStatementClassByKey(currentClass.Extends);
+
+                    GetPropertyClassesFromParentStatementClassRecursively(parentClass, result);
+                }
+            }
+        }
     }
 }

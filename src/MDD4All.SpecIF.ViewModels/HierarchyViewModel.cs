@@ -10,30 +10,32 @@ using System;
 using System.Collections.Generic;
 using MDD4All.UI.DataModels.Tree;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace MDD4All.SpecIF.ViewModels
 {
     public class HierarchyViewModel : ViewModelBase, ITree
     {
-        public HierarchyViewModel(ISpecIfMetadataReader metadataReader,
-                                  ISpecIfDataReader dataReader,
-                                  ISpecIfDataWriter dataWriter,
+        public HierarchyViewModel(ISpecIfDataProviderFactory specIfDataProviderFactory,
                                   Key key)
         {
-            _metadataReader = metadataReader;
-            _specIfDataWriter = dataWriter;
-            _specIfDataReader = dataReader;
+            _specIfDataProviderFactory = specIfDataProviderFactory;
+            _metadataReader = _specIfDataProviderFactory.MetadataReader;
+            _specIfDataWriter = _specIfDataProviderFactory.DataWriter;
+            _specIfDataReader = _specIfDataProviderFactory.DataReader;
 
             InitializeCommands();
 
             Node rootNode = _specIfDataReader.GetHierarchyByKey(key);
-            RootNode = new NodeViewModel(metadataReader, dataReader, dataWriter, this, rootNode);
+            RootNode = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, this, rootNode);
             //RootNode.EditorViewModel = this;
 
             RootNode.IsExpanded = true;
 
             _treeRootNodes = new ObservableCollection<ITreeNode>();
             _treeRootNodes.Add(RootNode);
+
+            SelectedNode = RootNode;
         }
 
         private void InitializeCommands()
@@ -50,12 +52,18 @@ namespace MDD4All.SpecIF.ViewModels
             MoveNodeDownCommand = new RelayCommand(ExecuteMoveNodeDown);
             NodeOneLevelHigherCommand = new RelayCommand(ExecuteNodeOneLevelHigher);
             NodeOneLevelLowerCommand = new RelayCommand(ExecuteNodeOneLevelLower);
+
+            StartAddStatementCommand = new RelayCommand(ExecuteStartAddNewStatement);
+            ConfirmAddStatementCommand = new RelayCommand(ExecuteConfirmAddNewStatement);
+            CancelAddStatementCommand = new RelayCommand(ExecuteCancelAddNewStatement);
         }
 
         public const string EDIT_EXISTING = "Edit existing";
         public const string NEW_CHILD = "New child";
         public const string NEW_BELOW = "New resource below";
         public const string NEW_ABOVE = "New resource above";
+
+        private ISpecIfDataProviderFactory _specIfDataProviderFactory;
 
         private ISpecIfMetadataReader _metadataReader;
 
@@ -231,6 +239,16 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        private CreateStatementViewModel _createStatementViewModel;
+
+        public CreateStatementViewModel CreateStatementViewModel
+        {
+            get
+            {
+                return _createStatementViewModel;
+            }
+        }
+
         public bool StateChanged
         {
             set
@@ -251,6 +269,8 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
         public bool ShowDeleteConfirm { get; set; } = false;
+
+        public bool ShowAddStatementDialog { get; set; } = false;
 
         public ObservableCollection<ITreeNode> TreeRootNodes
         {
@@ -306,6 +326,8 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        private ObservableCollection<ITreeNode> _treeRootNodes = new ObservableCollection<ITreeNode>();
+
         #region COMMAND_DEFINITIONS
 
         public ICommand StartEditResourceCommand { get; private set; }
@@ -336,9 +358,11 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ICommand NodeOneLevelLowerCommand { get; private set; }
 
-        private ObservableCollection<ITreeNode> _treeRootNodes = new ObservableCollection<ITreeNode>();
+        public ICommand StartAddStatementCommand { get; private set; }
 
+        public ICommand ConfirmAddStatementCommand { get; private set; }
 
+        public ICommand CancelAddStatementCommand { get; private set; }
 
 
         #endregion
@@ -650,6 +674,42 @@ namespace MDD4All.SpecIF.ViewModels
 
                 StateChanged = true;
             }
+        }
+
+        private void ExecuteStartAddNewStatement()
+        {
+            _createStatementViewModel = new CreateStatementViewModel(this, _specIfDataProviderFactory);
+            ShowAddStatementDialog = true;
+        }
+
+        private void ExecuteConfirmAddNewStatement()
+        {
+            ShowAddStatementDialog = false;
+
+            if(CreateStatementViewModel.StatementViewModel != null && 
+               CreateStatementViewModel.StatementViewModel.Resource != null)
+            {
+                Statement statement = CreateStatementViewModel.StatementViewModel.Resource as Statement;
+
+                if(statement != null)
+                {
+                    Task.Run(() =>
+                    {
+                        _specIfDataWriter.AddStatement(statement);
+
+                        CreateStatementViewModel.SelectedResource.ReinitializeStatementsAsync().Wait();
+                        CreateStatementViewModel.OppositeResource.ReinitializeStatementsAsync().Wait();
+                    });
+
+
+                    
+                }
+            }
+        }
+
+        private void ExecuteCancelAddNewStatement()
+        {
+            ShowAddStatementDialog = false;
         }
 
         #endregion

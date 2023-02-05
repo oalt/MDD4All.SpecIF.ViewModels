@@ -13,6 +13,13 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         }
 
+        public StatementClassViewModel(ISpecIfMetadataReader metadataReader,
+                                       ISpecIfMetadataWriter metadataWriter,
+                                       Key statementClassKey) : base(metadataReader, metadataWriter)
+        {
+            ResourceClass = metadataReader.GetStatementClassByKey(statementClassKey);
+        }
+
         public StatementClass StatementClass
         {
             get { return (StatementClass)base.ResourceClass; }

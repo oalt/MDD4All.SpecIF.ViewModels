@@ -4,6 +4,7 @@ using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataProvider.Contracts;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Input;
 
 namespace MDD4All.SpecIF.ViewModels.Metadata
@@ -12,6 +13,15 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
     {
         protected ISpecIfMetadataReader _specIfMetadataReader;
         protected ISpecIfMetadataWriter _specIfMetadataWriter;
+
+        public ResourceClassViewModel(ISpecIfMetadataReader metadataReader,
+                                      ISpecIfMetadataWriter metadataWriter)
+        {
+            _specIfMetadataReader = metadataReader;
+            _specIfMetadataWriter = metadataWriter;
+
+            InitializeCommands();
+        }
 
         public ResourceClassViewModel(ISpecIfMetadataReader metadataReader,
                                       ISpecIfMetadataWriter metadataWriter,
@@ -44,6 +54,30 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
                 //PropertyClass.Description.
             }
 
+        }
+
+        public string Title
+        {
+            get
+            {
+                return ResourceClass?.Title;
+            }
+        }
+
+        public bool HasProperties
+        {
+            get
+            {
+                bool result = false;
+                if (ResourceClass != null)
+                {
+                    if(ResourceClass.PropertyClasses != null && ResourceClass.PropertyClasses.Any())
+                    {
+                        result = true;
+                    }
+                }
+                return result;
+            }
         }
 
         public List<PropertyClassViewModel> AssignedPropertyClasses

@@ -559,12 +559,16 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 List<PropertyViewModel> result = new List<PropertyViewModel>();
 
-                if (Resource != null && Resource.Properties != null)
+                if (Resource != null)
                 {
                     foreach (PropertyClass propertyClass in PropertyClasses)
                     {
-                        Property property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
+                        Property property = null;
 
+                        if (Resource.Properties != null)
+                        {
+                            property = Resource.Properties.Find(p => p.GetClassTitle(_metadataReader) == propertyClass.Title);
+                        }
                         PropertyViewModel propertyViewModel;
 
                         if (property == null)
@@ -590,7 +594,7 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public List<PropertyClass> PropertyClasses
+        public virtual List<PropertyClass> PropertyClasses
         {
             get
             {
@@ -609,18 +613,21 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void GetPropertyClassesFromParentResourceClassRecursively(ResourceClass currentClass, List<PropertyClass> result)
         {
-            foreach (Key propertyClassKey in currentClass.PropertyClasses)
+            if (currentClass.PropertyClasses != null)
             {
-                PropertyClass propertyClass = _metadataReader.GetPropertyClassByKey(propertyClassKey);
+                foreach (Key propertyClassKey in currentClass.PropertyClasses)
+                {
+                    PropertyClass propertyClass = _metadataReader.GetPropertyClassByKey(propertyClassKey);
 
-                result.Add(propertyClass);
-            }
+                    result.Add(propertyClass);
+                }
 
-            if (currentClass.Extends != null)
-            {
-                ResourceClass parentClass = _metadataReader.GetResourceClassByKey(currentClass.Extends);
+                if (currentClass.Extends != null)
+                {
+                    ResourceClass parentClass = _metadataReader.GetResourceClassByKey(currentClass.Extends);
 
-                GetPropertyClassesFromParentResourceClassRecursively(parentClass, result);
+                    GetPropertyClassesFromParentResourceClassRecursively(parentClass, result);
+                }
             }
         }
 
@@ -780,6 +787,15 @@ namespace MDD4All.SpecIF.ViewModels
 
                 StatementsInitialized = true;
             }
+        }
+
+        public async Task ReinitializeStatementsAsync()
+        {
+            CachedViewModelFactory.InvalidateStatementsForResource(Key);
+            _incomingStatements = null;
+            _outgoingStatements = null;
+            _statementGraph = null;
+            await InitializeStatementsAsync();
         }
 
 
