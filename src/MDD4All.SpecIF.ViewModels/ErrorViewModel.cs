@@ -1,4 +1,4 @@
-namespace MDD4All.SpecIf.ViewModels
+namespace MDD4All.SpecIF.ViewModels
 {
     public class ErrorViewModel
     {
