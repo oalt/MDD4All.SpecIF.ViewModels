@@ -550,15 +550,26 @@ namespace MDD4All.SpecIF.ViewModels
 
             if (SelectedNode != null)
             {
+                ITreeNode selectedNodeAfterDelete;
+
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
                 int index = SelectedNode.Index;
+
+                if(index > 0)
+                {
+                    selectedNodeAfterDelete = parentViewModel.Children[index - 1];
+                }
+                else
+                {
+                    selectedNodeAfterDelete = parentViewModel;
+                }
 
                 parentViewModel.Children.RemoveAt(index);
                 parentViewModel.HierarchyNode.Nodes.RemoveAt(index);
                 _specIfDataWriter.UpdateHierarchy(parentViewModel.HierarchyNode);
 
-                SelectedNode = null;
+                SelectedNode = selectedNodeAfterDelete;
             }
 
 
@@ -735,19 +746,21 @@ namespace MDD4All.SpecIF.ViewModels
         private void ExpandSelectedNodeToRoot()
         {
             bool stateChanged = false;
-
-            ITreeNode currentNode = SelectedNode.Parent;
-            while (currentNode != null)
+            if (SelectedNode != null)
             {
-                if (currentNode.IsExpanded == false)
+                ITreeNode currentNode = SelectedNode.Parent;
+                while (currentNode != null)
                 {
-                    currentNode.IsExpanded = true;
-                    stateChanged = true;
+                    if (currentNode.IsExpanded == false)
+                    {
+                        currentNode.IsExpanded = true;
+                        stateChanged = true;
+                    }
+                    currentNode = currentNode.Parent;
                 }
-                currentNode = currentNode.Parent;
-            }
 
-            //StateChanged = stateChanged;
+                //StateChanged = stateChanged;
+            }
         }
 
 
