@@ -2,9 +2,7 @@
 using GalaSoft.MvvmLight.Command;
 using MDD4All.FileAccess.Contracts;
 using MDD4All.SpecIF.Converters;
-using MDD4All.SpecIF.DataProvider.Base.Cache;
 using MDD4All.SpecIF.DataProvider.Contracts;
-using MDD4All.SpecIF.ViewModels.Models;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -172,7 +170,7 @@ namespace MDD4All.SpecIF.ViewModels
                             ProgressMessageKey = "Message.ImportingData";
                             specIfConverter.ConvertAll(specIF, _dataWriter, _metadataWriter, OverrideExistingData);
 
-                            RefreshMetadataCache();
+                            _metadataReader.NotifyMetadataChanged();
 
                             SuccessMessageKey = "Message.ImportSuccess";
                         }
@@ -233,7 +231,7 @@ namespace MDD4All.SpecIF.ViewModels
                                 ProgressMessageKey = "Message.ImportingData";
                                 specIfConverter.ConvertAll(specIF, _dataWriter, _metadataWriter, OverrideExistingData);
 
-                                RefreshMetadataCache();
+                                _metadataReader.NotifyMetadataChanged();
 
                                 SuccessMessageKey = "Message.ImportSuccess";
                             }
@@ -285,15 +283,6 @@ namespace MDD4All.SpecIF.ViewModels
             Exception = null;
 
         }
-
-        private void RefreshMetadataCache()
-        {
-            if(_metadataReader is CachedSpecIfMetadataReader)
-            {
-                CachedSpecIfMetadataReader cachedSpecIfMetadataReader = _metadataReader as CachedSpecIfMetadataReader;
-
-                cachedSpecIfMetadataReader.ReinitializeCache();
-            }
-        }
+                
     }
 }
