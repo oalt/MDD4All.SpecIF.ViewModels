@@ -1,0 +1,1 @@
+﻿View models for SpecIF applications with user interfaces using the MVVM design patterm.
