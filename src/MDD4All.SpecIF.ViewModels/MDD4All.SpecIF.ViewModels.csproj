@@ -19,7 +19,6 @@
     <PackageReference Include="MDD4All.FileAccess.Contracts" Version="2.0.1.4" />
     <PackageReference Include="MDD4All.SpecIF.Converters" Version="2.0.0.3" />
     <PackageReference Include="MDD4All.SpecIF.DataFactory" Version="3.0.0.16" />
-    <PackageReference Include="MDD4All.SpecIF.DataModels.Manipulation" Version="3.0.0.31" />
     <PackageReference Include="MDD4All.SpecIF.DataProvider.Contracts" Version="4.0.0.26" />
     <PackageReference Include="MDD4All.UI.DataModels" Version="2.0.0.3" />
     <PackageReference Include="MvvmLightLibsStd10" Version="5.4.1.1" />
