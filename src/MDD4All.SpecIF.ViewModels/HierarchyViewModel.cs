@@ -584,6 +584,8 @@ namespace MDD4All.SpecIF.ViewModels
         {
             if (SelectedNode != null && SelectedNode.Parent != null)
             {
+                Node selectedNode = ((NodeViewModel)SelectedNode).HierarchyNode;
+
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
                 int childCount = parentViewModel.Children.Count;
@@ -599,6 +601,9 @@ namespace MDD4All.SpecIF.ViewModels
 
                     _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSibling.HierarchyNode.ID);
 
+                    parentViewModel.HierarchyNode.Nodes.RemoveAt(currentIndex);
+                    parentViewModel.HierarchyNode.Nodes.Insert(currentIndex + 1, selectedNode);
+
                     StateChanged = true;
                 }
             }
@@ -608,6 +613,8 @@ namespace MDD4All.SpecIF.ViewModels
         {
             if (SelectedNode != null && SelectedNode.Parent != null)
             {
+                Node selectedNode = ((NodeViewModel)SelectedNode).HierarchyNode;
+
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
                 int childCount = parentViewModel.Children.Count;
@@ -618,6 +625,8 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     parentViewModel.Children.RemoveAt(currentIndex);
                     parentViewModel.Children.Insert(currentIndex - 1, SelectedNode);
+
+                    
 
                     string newSiblingId = null;
 
@@ -631,6 +640,9 @@ namespace MDD4All.SpecIF.ViewModels
 
                     _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, parentViewModel.HierarchyNode.ID, newSiblingId);
 
+                    parentViewModel.HierarchyNode.Nodes.RemoveAt(currentIndex);
+                    parentViewModel.HierarchyNode.Nodes.Insert(currentIndex - 1, selectedNode);
+
                     StateChanged = true;
                 }
             }
@@ -640,6 +652,8 @@ namespace MDD4All.SpecIF.ViewModels
         {
             if (SelectedNode != null && SelectedNode.Parent != null && SelectedNode.Index > 0)
             {
+                Node selectedNode = ((NodeViewModel)SelectedNode).HierarchyNode;
+
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
                 int currentIndex = SelectedNode.Index;
@@ -663,6 +677,9 @@ namespace MDD4All.SpecIF.ViewModels
 
                 _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, newParent.HierarchyNode.ID, siblingID);
 
+                parentViewModel.HierarchyNode.Nodes.RemoveAt(currentIndex);
+                newParent.HierarchyNode.Nodes.Insert(newIndex, selectedNode);
+
                 StateChanged = true;
             }
         }
@@ -671,6 +688,8 @@ namespace MDD4All.SpecIF.ViewModels
         {
             if (SelectedNode != null && SelectedNode.Parent != null && SelectedNode.Parent.Parent != null)
             {
+                Node selectedNode = ((NodeViewModel)SelectedNode).HierarchyNode;
+
                 NodeViewModel parentViewModel = SelectedNode.Parent as NodeViewModel;
 
                 int currentIndex = SelectedNode.Index;
@@ -682,6 +701,9 @@ namespace MDD4All.SpecIF.ViewModels
                 SelectedNode.Parent = parentViewModel.Parent;
 
                 _specIfDataWriter.MoveNode(((NodeViewModel)SelectedNode).HierarchyNode.ID, ((NodeViewModel)parentViewModel.Parent).HierarchyNode.ID, parentViewModel.HierarchyNode.ID);
+
+                parentViewModel.HierarchyNode.Nodes.RemoveAt(currentIndex);
+                ((NodeViewModel)parentViewModel.Parent).HierarchyNode.Nodes.Insert(parentIndex + 1, selectedNode);
 
                 StateChanged = true;
             }
