@@ -115,6 +115,8 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
         private void ExecuteSavePropertyClass()
         {
             _specIfMetadataWriter.AddPropertyClass(PropertyClassUnderEdit.PropertyClass);
+            
+            _specIfMetadataReader.NotifyMetadataChanged();
 
             EditModeActive = false;
             StateChanged = true;

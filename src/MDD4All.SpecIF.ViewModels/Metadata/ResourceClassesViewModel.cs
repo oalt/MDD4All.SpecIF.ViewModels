@@ -116,6 +116,8 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
         {
             _specIfMetadataWriter.AddResourceClass(ResourceClassUnderEdit.ResourceClass);
 
+            _specIfMetadataReader.NotifyMetadataChanged();
+
             EditModeActive = false;
             StateChanged = true;
         }
