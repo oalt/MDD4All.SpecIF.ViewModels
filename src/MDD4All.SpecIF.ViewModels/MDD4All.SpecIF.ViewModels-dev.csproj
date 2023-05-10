@@ -16,6 +16,7 @@
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.Converters\src\MDD4All.SpecIF.Converters\MDD4All.SpecIF.Converters-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataFactory\src\MDD4All.SpecIF.DataFactory\MDD4All.SpecIF.DataFactory-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataModels.Manipulation\src\MDD4All.SpecIF.DataModels.Manipulation\MDD4All.SpecIF.DataModels.Manipulation-dev.csproj" />
+    <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataProvider.Base\src\MDD4All.SpecIF.DataProvider.Base\MDD4All.SpecIF.DataProvider.Base-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.SpecIF.DataProvider.Contracts\src\MDD4All.SpecIF.DataProvider.Contracts\MDD4All.SpecIF.DataProvider.Contracts-dev.csproj" />
     <ProjectReference Include="..\..\..\MDD4All.UI.DataModels\src\MDD4All.UI.DataModels\MDD4All.UI.DataModels-dev.csproj" />
     <ProjectReference Include="..\..\..\VisNetwork.Blazor.Models\src\VisNetwork.Blazor.Models\VisNetwork.Blazor.Models-dev.csproj" />
