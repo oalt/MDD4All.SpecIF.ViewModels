@@ -1,6 +1,8 @@
 ﻿View models for SpecIF applications with user interfaces using the MVVM design patterm.
 
 ## Changes
+### 2.0.4
+* Update nuget reference after fixing version setting in DLLs
 
 ### 2.0.3
 * Update VisNetwork.Blazor.Models after renaming of assembly file
