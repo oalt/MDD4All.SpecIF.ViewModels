@@ -8,6 +8,7 @@ using MDD4All.SpecIF.ViewModels.Revisioning;
 using Vis = VisNetwork.Blazor.Models;
 using MDD4All.SpecIF.ViewModels.Cache;
 using System.Threading.Tasks;
+using System;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -782,8 +783,15 @@ namespace MDD4All.SpecIF.ViewModels
 
                 });
 
-                _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
-                _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
+                try
+                {
+                    _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
+                    _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
+                }
+                catch(Exception exception)
+                {
+                    ;
+                }
 
                 StatementsInitialized = true;
             }
