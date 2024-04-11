@@ -352,7 +352,7 @@ namespace MDD4All.SpecIF.ViewModels
                         result += ReferencedResource.Stereotype + " ";
                     }
 
-                    result += ReferencedResource.Title;
+                    result += ReferencedResource.GetTitle(PrimaryLanguage);
 
                     if (!string.IsNullOrEmpty(ReferencedResource.ClassifierName))
                     {
