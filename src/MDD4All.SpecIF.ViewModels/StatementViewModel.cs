@@ -96,6 +96,14 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public Key StatementClassKey
+        {
+            get
+            {
+                return _statement.Class;
+            }
+        }
+
         public bool IsLoop
         {
             get

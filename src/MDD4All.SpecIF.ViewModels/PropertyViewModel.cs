@@ -531,5 +531,23 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
+        public override string ToString()
+        {
+            string result = "";
+
+            if(PropertyClass != null)
+            {
+                result += "[" + PropertyClass.Title + "] ";
+            }
+
+            result += PrimaryLanguageStringValue;
+
+            if(!string.IsNullOrEmpty(SecondaryLanguageStringValue))
+            {
+                result += " / " + SecondaryLanguageStringValue;
+            }
+
+            return result;
+        }
     }
 }

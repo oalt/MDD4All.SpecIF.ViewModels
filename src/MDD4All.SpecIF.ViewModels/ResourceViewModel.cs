@@ -9,6 +9,7 @@ using Vis = VisNetwork.Blazor.Models;
 using MDD4All.SpecIF.ViewModels.Cache;
 using System.Threading.Tasks;
 using System;
+using MDD4All.SpecIF.ViewModels.Metadata;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -1088,7 +1089,14 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
+        public override string ToString()
+        {
+            string result = "";
 
+            result += "[" + _metadataReader.GetResourceClassByKey(Resource.Class).Title + "]";
+
+            return result;
+        }
     }
 
 
