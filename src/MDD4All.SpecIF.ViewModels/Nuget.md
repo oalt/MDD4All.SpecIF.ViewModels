@@ -1,6 +1,10 @@
-﻿View models for SpecIF applications with user interfaces using the MVVM design patterm.
+﻿View models for SpecIF applications with user interfaces using the MVVM design pattern.
 
 ## Changes
+### 2.1.0
+* Small extensions on StatementViewModel (property getter for StatementClassKey)
+* Overrides of ToString() for improved debugging
+
 ### 2.0.4
 * Update nuget reference after fixing version setting in DLLs
 
