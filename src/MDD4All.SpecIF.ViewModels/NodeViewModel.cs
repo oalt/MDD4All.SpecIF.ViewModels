@@ -9,6 +9,7 @@ using MDD4All.SpecIF.ViewModels.Cache;
 using MDD4All.UI.DataModels.Tree;
 using System.Threading.Tasks;
 using System;
+using MDD4All.UI.DataModels.DragDrop;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -600,6 +601,14 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 return _tree;
+            }
+        }
+
+        public string DragDropOperationInformation
+        { 
+            get
+            {
+                return DragDropInformationValues.EXISTING_NODE;
             }
         }
 
