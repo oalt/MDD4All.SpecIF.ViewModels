@@ -37,21 +37,27 @@ namespace MDD4All.SpecIF.ViewModels
 
         public ResourceSearchViewModel SearchDataContext { get; set; }
 
-        public ResourceViewModel SelectedResource
+        public ResourceViewModel? SelectedResource
         {
             get
             {
-                return ((NodeViewModel)_hierarchyViewModel.SelectedNode).ReferencedResource;
+                ResourceViewModel? result = null;
+                if (_hierarchyViewModel.SelectedNode != null && _hierarchyViewModel.SelectedNode is NodeViewModel)
+                {
+                    result = ((NodeViewModel)_hierarchyViewModel.SelectedNode).ReferencedResource;
+                }
+
+                return result;
             }
         }
 
-        public ResourceViewModel OppositeResource { get; set; } = null;
+        public ResourceViewModel? OppositeResource { get; set; } = null;
 
         public StatementDirection DesiredDirection { get; set; } = StatementDirection.Out;
 
-        private Key _selectedStatementClass = null;
+        private Key? _selectedStatementClass = null;
 
-        public Key SelectedStatementClassKey
+        public Key? SelectedStatementClassKey
         {
             get
             {
@@ -71,13 +77,13 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public StatementClassViewModel StatementClassViewModel { get; set; }
+        public StatementClassViewModel? StatementClassViewModel { get; set; }
 
-        public StatementViewModel StatementViewModel { get; set; }
+        public StatementViewModel? StatementViewModel { get; set; }
 
         private void InitializeStatementData()
         {
-            if (_selectedStatementClass != null)
+            if (_selectedStatementClass != null && SelectedStatementClassKey != null)
             {
                 StatementClassViewModel = new StatementClassViewModel(_dataProviderFactory.MetadataReader,
                                                                       _dataProviderFactory.MetadataWriter,
@@ -86,29 +92,33 @@ namespace MDD4All.SpecIF.ViewModels
                 Key subjectKey;
                 Key objectKey;
 
-                if(DesiredDirection == StatementDirection.Out)
+                if (SelectedResource != null && OppositeResource != null)
                 {
-                    subjectKey = SelectedResource.Key;
-                    objectKey = OppositeResource.Key;
+
+                    if (DesiredDirection == StatementDirection.Out)
+                    {
+                        subjectKey = SelectedResource.Key;
+                        objectKey = OppositeResource.Key;
+                    }
+                    else
+                    {
+                        objectKey = SelectedResource.Key;
+                        subjectKey = OppositeResource.Key;
+                    }
+
+                    Statement statement = SpecIfDataFactory.CreateStatement(SelectedStatementClassKey,
+                                                                            subjectKey,
+                                                                            objectKey,
+                                                                            _dataProviderFactory.MetadataReader);
+
+                    StatementViewModel = new StatementViewModel(_dataProviderFactory.MetadataReader,
+                                                                _dataProviderFactory.DataReader,
+                                                                _dataProviderFactory.DataWriter,
+                                                                statement);
+                    StatementViewModel.IsInEditMode = true;
+
+                    CanConfirmEditOperation = true;
                 }
-                else
-                {
-                    objectKey = SelectedResource.Key;
-                    subjectKey = OppositeResource.Key;
-                }
-
-                Statement statement = SpecIfDataFactory.CreateStatement(SelectedStatementClassKey,
-                                                                        subjectKey,
-                                                                        objectKey,
-                                                                        _dataProviderFactory.MetadataReader);
-
-                StatementViewModel = new StatementViewModel(_dataProviderFactory.MetadataReader,
-                                                            _dataProviderFactory.DataReader,
-                                                            _dataProviderFactory.DataWriter,
-                                                            statement);
-                StatementViewModel.IsInEditMode = true;
-
-                CanConfirmEditOperation = true;
             }
             else
             {
@@ -139,9 +149,9 @@ namespace MDD4All.SpecIF.ViewModels
 
         #region COMMAND_DEFINITIONS
 
-        public ICommand StartBrowseForOppositeResourceCommand { get; private set; }
+        public ICommand StartBrowseForOppositeResourceCommand { get; private set; } = null!;
 
-        public ICommand EndBrowseForOppositeResourceCommand { get; private set; }
+        public ICommand EndBrowseForOppositeResourceCommand { get; private set; } = null!;
         #endregion
 
         private void ExecuteStartBrowseForOppositeResource()

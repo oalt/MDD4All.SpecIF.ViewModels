@@ -67,7 +67,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         public bool EditModeActive { get; set; } = false;
 
-        public ResourceClassViewModel ResourceClassUnderEdit { get; set; }
+        public ResourceClassViewModel? ResourceClassUnderEdit { get; set; }
 
         public bool StateChanged
         {
@@ -82,13 +82,13 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         #region COMMAND_DEFINITIONS
 
-        public ICommand AddResourceClassCommand { get; private set; }
+        public ICommand AddResourceClassCommand { get; private set; } = null!;
 
-        public ICommand EditResourceClassCommand { get; private set; }
+        public ICommand EditResourceClassCommand { get; private set; } = null!;
 
-        public ICommand SaveResourceClassAsNewCommand { get; private set; }
+        public ICommand SaveResourceClassAsNewCommand { get; private set; } = null!;
 
-        public ICommand CancelEditOperationCommand { get; private set; }
+        public ICommand CancelEditOperationCommand { get; private set; } = null!;
         #endregion
 
         #region COMMAND_IMPLEMENTATIONS
@@ -114,12 +114,15 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         private void ExecuteSaveResourceClass()
         {
-            _specIfMetadataWriter.AddResourceClass(ResourceClassUnderEdit.ResourceClass);
+            if (ResourceClassUnderEdit != null)
+            {
+                _specIfMetadataWriter.AddResourceClass(ResourceClassUnderEdit.ResourceClass);
 
-            _specIfMetadataReader.NotifyMetadataChanged();
+                _specIfMetadataReader.NotifyMetadataChanged();
 
-            EditModeActive = false;
-            StateChanged = true;
+                EditModeActive = false;
+                StateChanged = true;
+            }
         }
 
         private void ExecuteCancelEditOperation()

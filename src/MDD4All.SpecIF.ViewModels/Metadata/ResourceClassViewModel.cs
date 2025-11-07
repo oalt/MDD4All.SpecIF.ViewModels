@@ -40,13 +40,18 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
             AddPropertyClassCommand = new RelayCommand<string>(ExecuteAddPropertyClass);
         }
 
-        public ResourceClass ResourceClass { get; set; }
+        public ResourceClass? ResourceClass { get; set; }
 
         public string Description
         {
             get
             {
-                return ResourceClass.Description.GetDefaultStringValue();
+                string result = string.Empty;
+                if (ResourceClass != null)
+                {
+                    result = ResourceClass.Description.GetDefaultStringValue();
+                }
+                return result;
             }
 
             set
@@ -60,7 +65,12 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
         {
             get
             {
-                return ResourceClass?.Title;
+                string result = string.Empty;
+                if (ResourceClass != null)
+                {
+                    result = ResourceClass.Title;
+                }
+                return result;
             }
         }
 
@@ -71,7 +81,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
                 bool result = false;
                 if (ResourceClass != null)
                 {
-                    if(ResourceClass.PropertyClasses != null && ResourceClass.PropertyClasses.Any())
+                    if (ResourceClass.PropertyClasses != null && ResourceClass.PropertyClasses.Any())
                     {
                         result = true;
                     }
@@ -86,7 +96,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
             {
                 List<PropertyClassViewModel> result = new List<PropertyClassViewModel>();
 
-                if (ResourceClass.PropertyClasses != null)
+                if (ResourceClass != null && ResourceClass.PropertyClasses != null)
                 {
                     foreach (Key propertyClassKey in ResourceClass.PropertyClasses)
                     {
@@ -107,20 +117,23 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
             }
         }
 
-        public Key SelectedPropertyClassToAdd { get; set; }
+        public Key? SelectedPropertyClassToAdd { get; set; }
 
-        public ICommand AddPropertyClassCommand { get; private set; }
+        public ICommand AddPropertyClassCommand { get; private set; } = null!;
 
         private void ExecuteAddPropertyClass(string keyString)
         {
             Key key = new Key();
             key.InitailizeFromKeyString(keyString);
 
-            if(ResourceClass.PropertyClasses == null)
+            if (ResourceClass != null)
             {
-                ResourceClass.PropertyClasses = new List<Key>();
+                if (ResourceClass.PropertyClasses == null)
+                {
+                    ResourceClass.PropertyClasses = new List<Key>();
+                }
+                ResourceClass.PropertyClasses.Add(key);
             }
-            ResourceClass.PropertyClasses.Add(key);
         }
     }
 }

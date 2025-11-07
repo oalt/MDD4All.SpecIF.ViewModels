@@ -10,12 +10,12 @@ namespace MDD4All.SpecIF.ViewModels.Cache
         private static ConcurrentDictionary<Key, ResourceViewModel> _resourceViewModelCache = new ConcurrentDictionary<Key, ResourceViewModel>();
         private static ConcurrentDictionary<Key, List<StatementViewModel>> _statementViewModelCache = new ConcurrentDictionary<Key, List<StatementViewModel>>();
 
-        public static ResourceViewModel GetResourceViewModel(Key key,
+        public static ResourceViewModel? GetResourceViewModel(Key key,
                                                              ISpecIfMetadataReader metadataReader,
                                                              ISpecIfDataReader dataReader,
                                                              ISpecIfDataWriter dataWriter)
         {
-            ResourceViewModel result = null;
+            ResourceViewModel? result = null;
 
             if(_resourceViewModelCache.ContainsKey(key))
             {
@@ -49,7 +49,7 @@ namespace MDD4All.SpecIF.ViewModels.Cache
                                                                       ISpecIfDataReader dataReader,
                                                                       ISpecIfDataWriter dataWriter)
         {
-            List<StatementViewModel> result = null;
+            List<StatementViewModel> result = new List<StatementViewModel>();
 
             if (_statementViewModelCache.ContainsKey(resourceKey))
             {

@@ -10,6 +10,7 @@ using MDD4All.SpecIF.ViewModels.Cache;
 using System.Threading.Tasks;
 using System;
 using MDD4All.SpecIF.ViewModels.Metadata;
+using System.Linq;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -76,7 +77,7 @@ namespace MDD4All.SpecIF.ViewModels
 
 
 
-        public Key HierarchyID { get; set; }
+        public Key? HierarchyID { get; set; }
 
         private bool _isNew = false;
 
@@ -126,9 +127,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private Resource _resource;
+        private Resource? _resource;
 
-        public Resource Resource
+        public Resource? Resource
         {
             get
             {
@@ -165,9 +166,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private Node _node;
+        private Node? _node;
 
-        public Node Node
+        public Node? Node
         {
             get { return _node; }
             set { _node = value; }
@@ -181,7 +182,12 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "SpecIF:Status")?.GetStringValue(_metadataReader);
+                string result = "UNKNOWN STATUS";
+                if (_resource != null && _resource.Properties != null)
+                {
+                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "SpecIF:Status").GetStringValue(_metadataReader);
+                }
+                return result;
             }
 
             set
@@ -212,9 +218,8 @@ namespace MDD4All.SpecIF.ViewModels
 
                 if (_resource != null && _resource.Properties != null)
                 {
-                    result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title")?.GetStringValue(_metadataReader);
+                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title").GetStringValue(_metadataReader);
                 }
-
                 return result;
             }
         }
@@ -226,7 +231,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             if (_resource != null && _resource.Properties != null)
             {
-                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title")?.GetStringValue(_metadataReader, language);
+                result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:title").GetStringValue(_metadataReader, language);
             }
 
             return result;
@@ -295,10 +300,11 @@ namespace MDD4All.SpecIF.ViewModels
                 string result = "";
 
                 //List<Value> creator = Resource.GetPropertyValue(new Key("PC-Creator", "1"));
+                if (_resource != null && _resource.Properties != null)
+                {
 
-
-                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:creator")?.GetStringValue(_metadataReader);
-
+                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:creator").GetStringValue(_metadataReader);
+                }
 
                 if (string.IsNullOrEmpty(result))
                 {
@@ -314,9 +320,10 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-
-                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:identifier")?.GetStringValue(_metadataReader);
-
+                if (_resource != null && _resource.Properties != null)
+                {
+                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:identifier").GetStringValue(_metadataReader);
+                }
                 return result;
             }
         }
@@ -331,7 +338,7 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     StatementViewModel typeStatement = OutgoingStatements.Find(statement => statement.Type == "rdf:type");
 
-                    if (typeStatement != null)
+                    if (typeStatement != null && typeStatement.ObjectResource != null)
                     {
                         result = typeStatement.ObjectResource.Title;
                     }
@@ -345,9 +352,10 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-
-                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "UML:Stereotype")?.GetStringValue(_metadataReader);
-
+                if (_resource != null && _resource.Properties != null)
+                {
+                    result = _resource.GetPropertyValue("UML:Stereotype", _metadataReader);
+                }
                 if (!string.IsNullOrEmpty(result))
                 {
                     result = "«" + result + "»";
@@ -362,9 +370,10 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-
-                result = _resource?.Properties?.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:type")?.GetStringValue(_metadataReader);
-
+                if (_resource != null && _resource.Properties != null)
+                {
+                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:type").GetStringValue(_metadataReader);
+                }
                 return result;
             }
         }
@@ -407,7 +416,12 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                string result = Resource.ChangedAt.ToString();
+                string result = ""; 
+
+                if (_resource != null)
+                {
+                    _resource.ChangedAt.ToString();
+                }
 
                 return result;
             }
@@ -418,7 +432,7 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 string result = "";
-                string icon = Resource.GetResourceType(_metadataReader)?.Icon;
+                string? icon = Resource.GetResourceType(_metadataReader)?.Icon;
 
                 if (icon != null)
                 {
@@ -505,7 +519,14 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return Resource.Revision;
+                string result = "<UNKNOWN>";
+
+                if(_resource != null)
+                {
+                    result = _resource.Revision;
+                }
+
+                return result;
             }
         }
 
@@ -565,7 +586,7 @@ namespace MDD4All.SpecIF.ViewModels
                 {
                     foreach (PropertyClass propertyClass in PropertyClasses)
                     {
-                        Property property = null;
+                        Property? property = null;
 
                         if (Resource.Properties != null)
                         {
@@ -602,11 +623,14 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 List<PropertyClass> result = new List<PropertyClass>();
 
-                ResourceClass resourceClass = _metadataReader.GetResourceClassByKey(Resource.Class);
-
-                if (resourceClass != null)
+                if (Resource != null)
                 {
-                    GetPropertyClassesFromParentResourceClassRecursively(resourceClass, result);
+                    ResourceClass resourceClass = _metadataReader.GetResourceClassByKey(Resource.Class);
+
+                    if (resourceClass != null)
+                    {
+                        GetPropertyClassesFromParentResourceClassRecursively(resourceClass, result);
+                    }
                 }
 
                 return result;
@@ -639,7 +663,12 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return _metadataReader.GetResourceClassByKey(Resource.Class).ID;
+                string result = "<UNKNOWN>";
+                if(Resource != null)
+                {
+                    result = _metadataReader.GetResourceClassByKey(Resource.Class).ID;
+                }
+                return result;
             }
         }
 
@@ -744,9 +773,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private List<StatementViewModel> _incomingStatements = null;
+        private List<StatementViewModel>? _incomingStatements = null;
 
-        public List<StatementViewModel> IncomingStatements
+        public List<StatementViewModel>? IncomingStatements
         {
             get
             {
@@ -754,9 +783,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private List<StatementViewModel> _outgoingStatements = null;
+        private List<StatementViewModel>? _outgoingStatements = null;
 
-        public List<StatementViewModel> OutgoingStatements
+        public List<StatementViewModel>? OutgoingStatements
         {
             get
             {
@@ -786,8 +815,28 @@ namespace MDD4All.SpecIF.ViewModels
 
                 try
                 {
-                    _incomingStatements.AddRange(allStatements.FindAll(statement => statement.ObjectResource.Key.Equals(Key)));
-                    _outgoingStatements.AddRange(allStatements.FindAll(statement => statement.SubjectResource.Key.Equals(Key)));
+                    _incomingStatements.AddRange(allStatements.FindAll(statement =>
+                    {
+                        if (statement.ObjectResource != null)
+                        {
+                            return statement.ObjectResource.Key.Equals(Key);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }));
+                    _outgoingStatements.AddRange(allStatements.FindAll(statement =>
+                    {
+                        if (statement.SubjectResource != null)
+                        {
+                            return statement.SubjectResource.Key.Equals(Key);
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }));
                 }
                 catch(Exception exception)
                 {
@@ -808,9 +857,9 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        private Vis.NetworkData _statementGraph = null;
+        private Vis.NetworkData? _statementGraph = null;
 
-        public Vis.NetworkData StatementGraph
+        public Vis.NetworkData? StatementGraph
         {
             get
             {
@@ -846,80 +895,85 @@ namespace MDD4All.SpecIF.ViewModels
 
             statementNodes.Add(resourceNode);
 
-            foreach (StatementViewModel incommingStatement in IncomingStatements)
+            if (IncomingStatements != null)
             {
-                if (!incommingStatement.IsLoop)
+                foreach (StatementViewModel incommingStatement in IncomingStatements)
                 {
-                    string id = incommingStatement.SubjectResource.Key.ToString();
-                    if (!nodeIds.Contains(id))
+                    if (!incommingStatement.IsLoop && incommingStatement.SubjectResource != null)
                     {
-                        nodeIds.Add(id);
-
-                        Vis.Node node = new Vis.Node(id,
-                                                     CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
-
-                        node.Font = new Vis.NodeFontOption
+                        string id = incommingStatement.SubjectResource.Key.ToString();
+                        if (!nodeIds.Contains(id))
                         {
-                            Multi = true
-                        };
-                        statementNodes.Add(node);
+                            nodeIds.Add(id);
 
+                            Vis.Node node = new Vis.Node(id,
+                                                         CalculateLabelForStatementGraphNode(incommingStatement.SubjectResource), 1, "box");
 
-
-                        Vis.Edge edge = new Vis.Edge(id, Key.ToString());
-
-                        edge.Arrows = new Vis.Arrows()
-                        {
-                            To = new Vis.ArrowsOptions
+                            node.Font = new Vis.NodeFontOption
                             {
-                                Enabled = true,
-                                Type = "arrow"
-                            }
-                        };
-                        edge.Label = incommingStatement.Type;
+                                Multi = true
+                            };
+                            statementNodes.Add(node);
 
-                        statementEdges.Add(edge);
+
+
+                            Vis.Edge edge = new Vis.Edge(id, Key.ToString());
+
+                            edge.Arrows = new Vis.Arrows()
+                            {
+                                To = new Vis.ArrowsOptions
+                                {
+                                    Enabled = true,
+                                    Type = "arrow"
+                                }
+                            };
+                            edge.Label = incommingStatement.Type;
+
+                            statementEdges.Add(edge);
+                        }
                     }
                 }
             }
 
-            foreach (StatementViewModel outgoingStatement in OutgoingStatements)
+            if (OutgoingStatements != null)
             {
-                if (!outgoingStatement.IsLoop)
+                foreach (StatementViewModel outgoingStatement in OutgoingStatements)
                 {
-                    string id = outgoingStatement.ObjectResource.Key.ToString();
-                    if (!nodeIds.Contains(id))
+                    if (!outgoingStatement.IsLoop && outgoingStatement.ObjectResource != null)
                     {
-                        nodeIds.Add(id);
-
-                        Vis.Node node = new Vis.Node(id,
-                                                 CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource),
-                                                 3,
-                                                 "box");
-
-                        node.Font = new Vis.NodeFontOption
+                        string id = outgoingStatement.ObjectResource.Key.ToString();
+                        if (!nodeIds.Contains(id))
                         {
-                            Multi = true
-                        };
-                        statementNodes.Add(node);
+                            nodeIds.Add(id);
 
+                            Vis.Node node = new Vis.Node(id,
+                                                     CalculateLabelForStatementGraphNode(outgoingStatement.ObjectResource),
+                                                     3,
+                                                     "box");
 
-                        Vis.Edge edge = new Vis.Edge(Key.ToString(), id);
-                        edge.Arrows = new Vis.Arrows()
-                        {
-                            To = new Vis.ArrowsOptions
+                            node.Font = new Vis.NodeFontOption
                             {
-                                Enabled = true,
-                                Type = "arrow"
-                            }
-                        };
-                        edge.Label = outgoingStatement.Type;
+                                Multi = true
+                            };
+                            statementNodes.Add(node);
 
-                        statementEdges.Add(edge);
+
+                            Vis.Edge edge = new Vis.Edge(Key.ToString(), id);
+                            edge.Arrows = new Vis.Arrows()
+                            {
+                                To = new Vis.ArrowsOptions
+                                {
+                                    Enabled = true,
+                                    Type = "arrow"
+                                }
+                            };
+                            edge.Label = outgoingStatement.Type;
+
+                            statementEdges.Add(edge);
+                        }
                     }
                 }
             }
-
 
             _statementGraph = new Vis.NetworkData();
 
@@ -1013,7 +1067,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         }
 
-        private ResourceRevisionViewModel _resourceRevisionViewModel = null;
+        private ResourceRevisionViewModel? _resourceRevisionViewModel = null;
 
         public ResourceRevisionViewModel ResourceRevisionViewModel
         {
@@ -1093,7 +1147,10 @@ namespace MDD4All.SpecIF.ViewModels
         {
             string result = "";
 
-            result += "[" + _metadataReader.GetResourceClassByKey(Resource.Class).Title + "]";
+            if (Resource != null)
+            {
+                result += "[" + _metadataReader.GetResourceClassByKey(Resource.Class).Title + "]";
+            }
 
             return result;
         }

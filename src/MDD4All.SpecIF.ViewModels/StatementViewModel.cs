@@ -8,7 +8,7 @@ namespace MDD4All.SpecIF.ViewModels
     public class StatementViewModel : ResourceViewModel
     {
 
-        private Statement _statement;
+        private Statement? _statement;
 
 
 
@@ -49,22 +49,30 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void InitializeSubjectAndObject()
         {
-            _subjectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementSubject,
-                                                                           MetadataReader, 
-                                                                           DataReader, 
-                                                                           DataWriter);
+            if (_statement != null)
+            {
+                _subjectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementSubject,
+                                                                               MetadataReader,
+                                                                               DataReader,
+                                                                               DataWriter);
 
-            _objectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementObject,
-                                                                          MetadataReader, 
-                                                                          DataReader, 
-                                                                          DataWriter);
+                _objectResource = CachedViewModelFactory.GetResourceViewModel(_statement.StatementObject,
+                                                                              MetadataReader,
+                                                                              DataReader,
+                                                                              DataWriter);
+            }
         }
 
         public string StatementID
         {
             get
             {
-                return _statement.ID;
+                string result = string.Empty;
+                if(_statement != null)
+                {
+                    result = _statement.ID;
+                }
+                return result;
             }
         }
 
@@ -72,13 +80,18 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return _statement.Revision;
+                string result = string.Empty;
+                if(_statement != null)
+                {
+                    result = _statement.Revision;
+                }
+                return result;
             }
         }
 
-        private ResourceViewModel _subjectResource;
+        private ResourceViewModel? _subjectResource;
 
-        public ResourceViewModel SubjectResource
+        public ResourceViewModel? SubjectResource
         {
             get
             {
@@ -86,9 +99,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private ResourceViewModel _objectResource;
+        private ResourceViewModel? _objectResource;
 
-        public ResourceViewModel ObjectResource
+        public ResourceViewModel? ObjectResource
         {
             get
             {
@@ -96,11 +109,16 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public Key StatementClassKey
+        public Key? StatementClassKey
         {
             get
             {
-                return _statement.Class;
+                Key? result = null;
+                if(_statement != null)
+                {
+                    result = _statement.Class;
+                }
+                return result;
             }
         }
 
@@ -108,7 +126,12 @@ namespace MDD4All.SpecIF.ViewModels
         {
             get
             {
-                return _statement.StatementObject.ID == _statement.StatementSubject.ID;
+                bool result = false;
+                if(_statement != null)
+                { 
+                    result = _statement.StatementObject.ID == _statement.StatementSubject.ID;
+                }
+                return result;
             }
         }
 
@@ -117,12 +140,14 @@ namespace MDD4All.SpecIF.ViewModels
             get
             {
                 List<PropertyClass> result = new List<PropertyClass>();
-
-                StatementClass resourceClass = MetadataReader.GetStatementClassByKey(Resource.Class);
-
-                if (resourceClass != null)
+                if (Resource != null)
                 {
-                    GetPropertyClassesFromParentStatementClassRecursively(resourceClass, result);
+                    StatementClass resourceClass = MetadataReader.GetStatementClassByKey(Resource.Class);
+
+                    if (resourceClass != null)
+                    {
+                        GetPropertyClassesFromParentStatementClassRecursively(resourceClass, result);
+                    }
                 }
 
                 return result;

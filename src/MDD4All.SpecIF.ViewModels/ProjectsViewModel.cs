@@ -11,14 +11,17 @@ namespace MDD4All.SpecIF.ViewModels
     public class ProjectsViewModel : ViewModelBase
     {
         private ISpecIfMetadataReader _metadataReader;
+        private ISpecIfMetadataWriter _metadataWriter;
         private ISpecIfDataWriter _dataWriter;
         private ISpecIfDataReader _dataReader;
 
         public ProjectsViewModel(ISpecIfMetadataReader metadataReader,
-                                ISpecIfDataWriter specIfDataWriter,
-                                ISpecIfDataReader specIfDataReader)
+                                 ISpecIfMetadataWriter metadataWriter,
+                                 ISpecIfDataWriter specIfDataWriter,
+                                 ISpecIfDataReader specIfDataReader)
         {
             _metadataReader = metadataReader;
+            _metadataWriter = metadataWriter;
             _dataWriter = specIfDataWriter;
             _dataReader = specIfDataReader;
 
@@ -49,15 +52,19 @@ namespace MDD4All.SpecIF.ViewModels
             AddNewProjectCommand = new RelayCommand<List<string>>(ExecuteAddNewProject);
             EditProjectCommand = new RelayCommand<List<string>>(ExecuteEditProject);
         }
-        public ICommand AddNewProjectCommand { get; private set; }
-        public ICommand EditProjectCommand { get; private set; }
+
+
+        public ICommand AddNewProjectCommand { get; private set; } = null!;
+
+        public ICommand EditProjectCommand { get; private set; } = null!;
+
+
         public List<ProjectViewModel> Projects { get; private set; } = new List<ProjectViewModel>();
 
         private void ExecuteAddNewProject(List<string> parameters)
         {
             if (parameters != null && parameters.Count == 2)
             {
-                ISpecIfMetadataWriter _metadataWriter = _dataWriter as ISpecIfMetadataWriter;
                 Guid newGuid = Guid.NewGuid();
 
                 SpecIF.DataModels.SpecIF newProject = new DataModels.SpecIF();
@@ -85,13 +92,14 @@ namespace MDD4All.SpecIF.ViewModels
                 throw new System.ArgumentException("Invalid parameters for adding a new project. Expected two parameters: title and description.");
             }
         }
+
         private void ExecuteEditProject(List<string> parameters)
         {
             if (string.IsNullOrEmpty(parameters[2]) || parameters == null || parameters.Count != 3)
             {
                 throw new ArgumentException("Invalid parameters for editing a project.");
             }
-            ISpecIfMetadataWriter _metadataWriter = _dataWriter as ISpecIfMetadataWriter;
+          
             SpecIF.DataModels.SpecIF editedProject = new DataModels.SpecIF();
             ProjectDescriptor projectDescriptor = new ProjectDescriptor
             {

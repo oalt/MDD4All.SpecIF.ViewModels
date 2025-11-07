@@ -12,22 +12,22 @@ namespace MDD4All.SpecIF.ViewModels.Tree
         }
 
         [JsonProperty("text")]
-        public string Text { get; set; }
+        public string? Text { get; set; }
 
         [JsonProperty("icon")]
-        public string Icon { get; set; }
+        public string? Icon { get; set; }
 
         [JsonProperty("selectedIcon")]
-        public string SelectedIcon { get; set; }
+        public string? SelectedIcon { get; set; }
 
         [JsonProperty("color")]
-        public string Color { get; set; }
+        public string? Color { get; set; }
 
         [JsonProperty("backColor")]
-        public string BackColor { get; set; }
+        public string? BackColor { get; set; }
 
         [JsonProperty("href")]
-        public string Href { get; set; }
+        public string? Href { get; set; }
 
         [JsonProperty("selectable")]
         public bool Selectable { get; set; }

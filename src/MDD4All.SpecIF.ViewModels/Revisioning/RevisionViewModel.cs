@@ -30,13 +30,13 @@ namespace MDD4All.SpecIF.ViewModels.Revisioning
 
         protected abstract void InitializeResourceViewModels();
 
-        public List<ResourceViewModel> ResourceViewModels { get; set; }
+        public List<ResourceViewModel> ResourceViewModels { get; set; } = new List<ResourceViewModel>();
 
         public Key CurrentRevision { get; set; }
 
         public ResourceViewModel GetSelectedResourceRevision(string revision)
         {
-            ResourceViewModel result = null;
+            ResourceViewModel? result = null;
 
             result = ResourceViewModels.Find(resource => resource.Revision == revision);
 
@@ -128,7 +128,10 @@ namespace MDD4All.SpecIF.ViewModels.Revisioning
 
                 List<Vis.Node> nodes = new List<Vis.Node>();
 
-                List<ResourceViewModel> sortedList = ResourceViewModels.OrderBy(x => x.Resource.ChangedAt).ToList();
+                List<ResourceViewModel> sortedList = ResourceViewModels.OrderBy(x =>
+                {
+                    return x.Resource?.ChangedAt;
+                }).ToList();
 
 
 
@@ -136,32 +139,36 @@ namespace MDD4All.SpecIF.ViewModels.Revisioning
                 int level = 1;
                 foreach (ResourceViewModel resourceViewModel in sortedList)
                 {
-                    Vis.Node node = new Vis.Node();
-
-                    node.Id = resourceViewModel.Resource.Revision;
-                    node.Label = resourceViewModel.Resource.ChangedAt.ToShortDateString() + "\n"
-                                 + resourceViewModel.Resource.ChangedAt.ToString("HH:mm:ss");
-                    node.Shape = "dot";
-                    node.Level = level;
-
-                    if (resourceViewModel.Resource.Revision == CurrentRevision.Revision)
+                    if (resourceViewModel.Resource != null)
                     {
-                        node.Shape = "star";
-                        node.Color = new Vis.NodeColorType()
+                        Vis.Node node = new Vis.Node();
+
+
+                        node.Id = resourceViewModel.Resource.Revision;
+                        node.Label = resourceViewModel.Resource.ChangedAt.ToShortDateString() + "\n"
+                                     + resourceViewModel.Resource.ChangedAt.ToString("HH:mm:ss");
+                        node.Shape = "dot";
+                        node.Level = level;
+
+                        if (resourceViewModel.Resource.Revision == CurrentRevision.Revision)
                         {
-                            Background = "#5CB400"
-                        };
+                            node.Shape = "star";
+                            node.Color = new Vis.NodeColorType()
+                            {
+                                Background = "#5CB400"
+                            };
+                        }
+
+                        if (resourceViewModel.Resource.Replaces == null || resourceViewModel.Resource.Replaces.Count == 0)
+                        {
+                            node.Shape = "diamond";
+                        }
+
+                        nodeDictionary.Add(resourceViewModel.Resource.Revision, node);
+                        nodes.Insert(0, node);
+
+                        level++;
                     }
-
-                    if (resourceViewModel.Resource.Replaces == null || resourceViewModel.Resource.Replaces.Count == 0)
-                    {
-                        node.Shape = "diamond";
-                    }
-
-                    nodeDictionary.Add(resourceViewModel.Resource.Revision, node);
-                    nodes.Insert(0, node);
-
-                    level++;
                 }
 
                 RevisionGraph.Nodes = nodes;
@@ -171,15 +178,18 @@ namespace MDD4All.SpecIF.ViewModels.Revisioning
 
                 foreach (ResourceViewModel resourceViewModel in sortedList)
                 {
-                    Resource resource = resourceViewModel.Resource;
-                    if (resource.Replaces != null)
+                    if (resourceViewModel.Resource != null)
                     {
-                        foreach (string replacement in resource.Replaces)
+                        Resource resource = resourceViewModel.Resource;
+                        if (resource.Replaces != null)
                         {
-                            if (nodeDictionary.ContainsKey(replacement))
+                            foreach (string replacement in resource.Replaces)
                             {
-                                Vis.Edge edge = new Vis.Edge(replacement, resource.Revision);
-                                edges.Add(edge);
+                                if (nodeDictionary.ContainsKey(replacement))
+                                {
+                                    Vis.Edge edge = new Vis.Edge(replacement, resource.Revision);
+                                    edges.Add(edge);
+                                }
                             }
                         }
                     }

@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Windows.Input;
+using System.Diagnostics.CodeAnalysis;
 
 namespace MDD4All.SpecIF.ViewModels
 {
@@ -35,6 +36,7 @@ namespace MDD4All.SpecIF.ViewModels
             InitializeCommands();
         }
 
+        
         private void InitializeCommands()
         {
             ImportSpecIfFromUrlCommand = new RelayCommand(ExecuteImportSpecIfFromUrlCommandAsync);
@@ -99,9 +101,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private string _successMessageKey;
+        private string? _successMessageKey;
 
-        public string SuccessMessageKey
+        public string? SuccessMessageKey
         {
             get 
             {
@@ -115,9 +117,9 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        private string _errorMessageKey;
+        private string? _errorMessageKey;
 
-        public string ErrorMessageKey
+        public string? ErrorMessageKey
         {
             get
             {
@@ -131,14 +133,14 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public Exception Exception { get; set; }
+        public Exception? Exception { get; set; }
 
         #region COMMAND_DEFINITIONS
-        public ICommand ImportSpecIfFromUrlCommand { get; private set; }
+        public ICommand ImportSpecIfFromUrlCommand { get; private set; } = null!;
 
-        public ICommand SelectFileCommand { get; private set; }
+        public ICommand SelectFileCommand { get; private set; } = null!;
 
-        public ICommand ImportSpecIfFromFileCommand { get; private set; }
+        public ICommand ImportSpecIfFromFileCommand { get; private set; } = null!;
         #endregion
 
         private async void ExecuteImportSpecIfFromUrlCommandAsync()
@@ -162,7 +164,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                     if (!string.IsNullOrEmpty(responseString))
                     {
-                        DataModels.SpecIF specIF = JsonConvert.DeserializeObject<DataModels.SpecIF>(responseString);
+                        DataModels.SpecIF? specIF = JsonConvert.DeserializeObject<DataModels.SpecIF>(responseString);
 
                         if (specIF != null)
                         {
@@ -223,7 +225,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                         if (json != null)
                         {
-                            DataModels.SpecIF specIF = JsonConvert.DeserializeObject<DataModels.SpecIF>(json);
+                            DataModels.SpecIF? specIF = JsonConvert.DeserializeObject<DataModels.SpecIF>(json);
 
                             if (specIF != null)
                             {

@@ -3,7 +3,6 @@ using GalaSoft.MvvmLight.Command;
 using MDD4All.SpecIF.DataModels;
 using MDD4All.SpecIF.DataModels.Manipulation;
 using MDD4All.SpecIF.DataProvider.Contracts;
-using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows.Input;
@@ -16,7 +15,7 @@ namespace MDD4All.SpecIF.ViewModels
         private ISpecIfMetadataReader _metadataReader;
         private ISpecIfDataWriter _dataWriter;
         private ISpecIfDataReader _dataReader;
-        private ISpecIfMetadataWriter _metadataWriter;
+        
 
         public ProjectViewModel(ProjectDescriptor projectDescriptor,
                                 ISpecIfMetadataReader metadataReader,
@@ -46,6 +45,8 @@ namespace MDD4All.SpecIF.ViewModels
                                                                                _dataWriter,
                                                                                null,
                                                                                node);
+                hierarchyViewModel.ProjectID = _projectDescriptor.ID;
+
                 Hierarchies.Add(hierarchyViewModel);
             }
         }
@@ -90,8 +91,8 @@ namespace MDD4All.SpecIF.ViewModels
                 return result;
             }
         }
-        public ICommand CreateNewHierarchyCommand { get; private set; }
-        public ICommand DeleteHierarchyCommand { get; private set; }
+        public ICommand CreateNewHierarchyCommand { get; private set; } = null!;
+        public ICommand DeleteHierarchyCommand { get; private set; } = null!;
 
         private void ExecuteCreateNewHierarchy(Resource resource)
         {
@@ -110,19 +111,23 @@ namespace MDD4All.SpecIF.ViewModels
         {
             Key key = new Key();
             key.InitailizeFromKeyString(hierarchyKeyString);
-            NodeViewModel NodeToDelete = null;
+            NodeViewModel? nodeToDelete = null;
 
             foreach (NodeViewModel hierarchy in Hierarchies)
             {
-                if (hierarchy.HierarchyKey.Equals(key))
+                if (hierarchy.HierarchyKey != null && hierarchy.HierarchyKey.Equals(key))
                 {
-                    NodeToDelete = hierarchy;
+                    nodeToDelete = hierarchy;
                     break;
                 }
             }
-            _dataWriter.DeleteNode(NodeToDelete.NodeID, ProjectID);
-            Hierarchies.Remove(NodeToDelete);
+            if (nodeToDelete != null)
+            {
+                _dataWriter.DeleteNode(nodeToDelete.NodeID, ProjectID);
+                Hierarchies.Remove(nodeToDelete);
+            }
         }
+
         public void SetProjectDescriptor(ProjectDescriptor projectDescriptor)
         {
             _projectDescriptor = projectDescriptor;

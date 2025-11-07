@@ -11,7 +11,7 @@ namespace MDD4All.SpecIF.ViewModels
     public class PropertyViewModel : ViewModelBase
     {
         private ISpecIfMetadataReader _specIfMetadataReader;
-        private ResourceViewModel _resourceViewModel;
+        private ResourceViewModel? _resourceViewModel;
 
         public PropertyViewModel(ISpecIfMetadataReader specIfMetadataReader,
                                  Property property)
@@ -42,7 +42,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         public Key PropertyClassKey { get; set; }
 
-        public Property Property
+        public Property? Property
         {
             get;
             set;
@@ -123,7 +123,7 @@ namespace MDD4All.SpecIF.ViewModels
                         if (Property == null)
                         {
                             Property = new Property(PropertyClassKey, value);
-                            if (_resourceViewModel != null)
+                            if (_resourceViewModel != null && _resourceViewModel.Resource != null)
                             {
                                 _resourceViewModel.Resource.Properties.Add(Property);
                             }
@@ -155,7 +155,7 @@ namespace MDD4All.SpecIF.ViewModels
             if (Property == null)
             {
                 Property = new Property(PropertyClassKey, new List<Value>());
-                if (_resourceViewModel != null)
+                if (_resourceViewModel != null && _resourceViewModel.Resource != null)
                 {
                     _resourceViewModel.Resource.Properties.Add(Property);
                 }
@@ -179,7 +179,7 @@ namespace MDD4All.SpecIF.ViewModels
             if (Property == null)
             {
                 Property = new Property(PropertyClassKey, new List<Value>());
-                if (_resourceViewModel != null)
+                if (_resourceViewModel != null && _resourceViewModel.Resource != null)
                 {
                     _resourceViewModel.Resource.Properties.Add(Property);
                 }
@@ -292,7 +292,7 @@ namespace MDD4All.SpecIF.ViewModels
                         Property = new Property();
                         Property.Class = PropertyClassKey;
                         Property.SetSingleStringValue(value, PrimaryLanguage, PropertyClass.Format);
-                        if (_resourceViewModel != null)
+                        if (_resourceViewModel != null && _resourceViewModel.Resource != null)
                         {
                             _resourceViewModel.Resource.Properties.Add(Property);
                         }
@@ -326,7 +326,7 @@ namespace MDD4All.SpecIF.ViewModels
                         Property = new Property();
                         Property.Class = PropertyClassKey;
                         Property.SetSingleStringValue(value, SecondaryLanguage, PropertyClass.Format);
-                        if (_resourceViewModel != null)
+                        if (_resourceViewModel != null && _resourceViewModel.Resource != null)
                         {
                             _resourceViewModel.Resource.Properties.Add(Property);
                         }
@@ -378,11 +378,11 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public DataType DataType
+        public DataType? DataType
         {
             get
             {
-                DataType result = null;
+                DataType? result = null;
 
                 PropertyClass propertyClass = _specIfMetadataReader.GetPropertyClassByKey(PropertyClassKey);
                 if (propertyClass != null)
@@ -400,7 +400,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 string result = "xs:string";
 
-                DataType dataType = DataType;
+                DataType? dataType = DataType;
 
                 if (dataType != null)
                 {
@@ -467,7 +467,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 bool result = false;
 
-                DataType dataType = DataType;
+                DataType? dataType = DataType;
 
                 if (dataType != null && dataType.Enumeration != null && dataType.Enumeration.Count > 0)
                 {
@@ -484,7 +484,7 @@ namespace MDD4All.SpecIF.ViewModels
             {
                 bool result = false;
 
-                DataType dataType = DataType;
+                DataType? dataType = DataType;
 
                 if (dataType != null && dataType.Multiple.HasValue)
                 {
@@ -501,7 +501,7 @@ namespace MDD4All.SpecIF.ViewModels
         {
             if (IsEnumeration)
             {
-                if (DataType.Enumeration != null)
+                if (DataType != null && DataType.Enumeration != null)
                 {
                     foreach (EnumerationValue enumerationValue in DataType.Enumeration)
                     {

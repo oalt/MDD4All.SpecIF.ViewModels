@@ -20,9 +20,19 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
             ResourceClass = metadataReader.GetStatementClassByKey(statementClassKey);
         }
 
-        public StatementClass StatementClass
+        public StatementClass? StatementClass
         {
-            get { return (StatementClass)base.ResourceClass; }
+            get 
+            {
+                StatementClass? result = null; 
+                
+                if(base.ResourceClass != null)
+                {
+                    result = (StatementClass)base.ResourceClass;
+                }
+                
+                return result;
+            }
         }
 
     }

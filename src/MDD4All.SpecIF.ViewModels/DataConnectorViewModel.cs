@@ -59,10 +59,10 @@ namespace MDD4All.SpecIF.ViewModels
         }
 
 
-        public Action ConnectAction { get; set; }
+        public Action? ConnectAction { get; set; }
 
-        public ISpecIfDataProviderFactory SpecIfDataProviderFactory { get; set; }
+        public ISpecIfDataProviderFactory? SpecIfDataProviderFactory { get; set; }
 
-        public ICommand ConnectCommand { get; private set; }
+        public ICommand ConnectCommand { get; private set; } = null!;
     }
 }

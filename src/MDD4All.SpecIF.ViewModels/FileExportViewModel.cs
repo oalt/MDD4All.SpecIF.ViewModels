@@ -22,7 +22,8 @@ namespace MDD4All.SpecIF.ViewModels
 
         public FileExportViewModel(string keyString,
                                    ISpecIfDataProviderFactory dataProviderFactory,
-                                   IFileSaver fileSaver)
+                                   IFileSaver fileSaver,
+                                   string? projectID = null)
         {
             HierarchyKey = new Key();
             HierarchyKey.InitailizeFromKeyString(keyString);
@@ -32,6 +33,11 @@ namespace MDD4All.SpecIF.ViewModels
 
             _rootNodeViewModel = new NodeViewModel(dataProviderFactory.MetadataReader, dataProviderFactory.DataReader,
                                                    dataProviderFactory.DataWriter, null, HierarchyKey);
+
+            if(projectID != null)
+            {
+                _rootNodeViewModel.ProjectID = projectID;
+            }
 
             SetDefaultFilenameFromTitle();
             InitializeCommands();
@@ -84,9 +90,9 @@ namespace MDD4All.SpecIF.ViewModels
 
         public SpecIfFileFormat FileFormat { get; set; } = SpecIfFileFormat.Specif;
 
-        public string ErrorMessage { get; set; } = null;
+        public string? ErrorMessage { get; set; } = null;
 
-        public string SuccessMessageKey { get; set; } = null;
+        public string? SuccessMessageKey { get; set; } = null;
 
         public string FileExtension
         {
@@ -108,12 +114,12 @@ namespace MDD4All.SpecIF.ViewModels
             }
         }
 
-        public System.IO.FileInfo ResultingFile { get; set; } = null;
+        public System.IO.FileInfo? ResultingFile { get; set; } = null;
         #endregion
 
         #region COMMAND_DEFINITIONS
 
-        public ICommand ExportHierarchyCommand { get; set; }
+        public ICommand ExportHierarchyCommand { get; set; } = null!;
 
         #endregion
 

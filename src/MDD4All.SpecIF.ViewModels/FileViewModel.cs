@@ -28,7 +28,7 @@ namespace MDD4All.SpecIF.ViewModels
             UploadFileCommand = new RelayCommand(UploadFile);
         }
 
-        public string TempFileName { get; set; }
+        public string? TempFileName { get; set; }
 
         public string FileName { get; set; } = "";
 

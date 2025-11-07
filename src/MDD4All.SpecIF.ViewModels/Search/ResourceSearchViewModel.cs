@@ -19,15 +19,15 @@ namespace MDD4All.SpecIF.ViewModels.Search
             RunSearchCommand = new RelayCommand(ExecuteRunSearchCommand);
         }
 
-        public HierarchyViewModel CurrentHierarchy { get; set; }
+        public HierarchyViewModel? CurrentHierarchy { get; set; }
 
-        public ResourceViewModel SelectedResource { get; set; } = null;
+        public ResourceViewModel? SelectedResource { get; set; } = null;
 
         public string SerachTerm { get; set; } = "";
 
         public List<ResourceViewModel> SearchResults { get; private set; } = new List<ResourceViewModel>();
 
-        public ICommand RunSearchCommand { get; private set; }
+        public ICommand RunSearchCommand { get; private set; } = null!;
 
         private void ExecuteRunSearchCommand()
         {
@@ -41,49 +41,52 @@ namespace MDD4All.SpecIF.ViewModels.Search
                 {
                     if(node.ReferencedResource != null)
                     {
-                        if(string.IsNullOrEmpty(SerachTerm))
+                        if (string.IsNullOrEmpty(SerachTerm))
                         {
                             SearchResults.Add(node.ReferencedResource);
                         }
                         else
                         {
-                            Resource resource = node.ReferencedResource.Resource;
-
-                            bool match = false;
-                            if(resource != null)
+                            if (node.ReferencedResource != null && node.ReferencedResource.Resource != null)
                             {
-                                if(resource.Properties != null)
+                                Resource resource = node.ReferencedResource.Resource;
+
+                                bool match = false;
+                                if (resource != null)
                                 {
-                                    foreach(Property property in resource.Properties)
+                                    if (resource.Properties != null)
                                     {
-                                        foreach(Value value in property.Values)
+                                        foreach (Property property in resource.Properties)
                                         {
-                                            if(!string.IsNullOrEmpty(value.StringValue))
+                                            foreach (Value value in property.Values)
                                             {
-                                                
-                                                if (value.StringValue.IndexOf(SerachTerm, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                                                if (!string.IsNullOrEmpty(value.StringValue))
                                                 {
-                                                    SearchResults.Add(node.ReferencedResource);
-                                                    match = true;
-                                                    break;
+
+                                                    if (value.StringValue.IndexOf(SerachTerm, StringComparison.InvariantCultureIgnoreCase) >= 0)
+                                                    {
+                                                        SearchResults.Add(node.ReferencedResource);
+                                                        match = true;
+                                                        break;
+                                                    }
+
+                                                }
+                                                else
+                                                {
+                                                    MultilanguageText multilanguageText = value.MultilanguageTexts.Find(text => text.Text.IndexOf(SerachTerm, StringComparison.InvariantCultureIgnoreCase) >= 0);
+                                                    if (multilanguageText != null)
+                                                    {
+                                                        SearchResults.Add(node.ReferencedResource);
+                                                        match = true;
+                                                        break;
+                                                    }
                                                 }
 
                                             }
-                                            else
+                                            if (match)
                                             {
-                                                MultilanguageText multilanguageText = value.MultilanguageTexts.Find(text => text.Text.IndexOf(SerachTerm, StringComparison.InvariantCultureIgnoreCase) >= 0);
-                                                if(multilanguageText != null)
-                                                {
-                                                    SearchResults.Add(node.ReferencedResource);
-                                                    match = true;
-                                                    break;
-                                                }
+                                                break;
                                             }
-                                            
-                                        }
-                                        if (match)
-                                        {
-                                            break;
                                         }
                                     }
                                 }

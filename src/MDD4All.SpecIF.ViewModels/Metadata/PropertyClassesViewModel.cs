@@ -47,7 +47,7 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         public List<PropertyClassViewModel> PropertyClasses { get; set; }
 
-        public PropertyClassViewModel PropertyClassUnderEdit { get; set; }
+        public PropertyClassViewModel? PropertyClassUnderEdit { get; set; }
 
         public List<DataTypeViewModel> DataTypes
         {
@@ -82,13 +82,13 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         #region COMMAND_DEFINITIONS
 
-        public ICommand AddPropertyClassCommand { get; private set; }
+        public ICommand AddPropertyClassCommand { get; private set; } = null!;
 
-        public ICommand EditPropertyClassCommand { get; private set; }
+        public ICommand EditPropertyClassCommand { get; private set; } = null!;
 
-        public ICommand SavePropertyClassAsNewCommand { get; private set; }
+        public ICommand SavePropertyClassAsNewCommand { get; private set; } = null!;
 
-        public ICommand CancelEditOperationCommand { get; private set; }
+        public ICommand CancelEditOperationCommand { get; private set; } = null!;
         #endregion
 
         #region COMMAND_IMPLEMENTATIONS
@@ -114,12 +114,15 @@ namespace MDD4All.SpecIF.ViewModels.Metadata
 
         private void ExecuteSavePropertyClass()
         {
-            _specIfMetadataWriter.AddPropertyClass(PropertyClassUnderEdit.PropertyClass);
-            
-            _specIfMetadataReader.NotifyMetadataChanged();
+            if (PropertyClassUnderEdit != null)
+            {
+                _specIfMetadataWriter.AddPropertyClass(PropertyClassUnderEdit.PropertyClass);
 
-            EditModeActive = false;
-            StateChanged = true;
+                _specIfMetadataReader.NotifyMetadataChanged();
+
+                EditModeActive = false;
+                StateChanged = true;
+            }
         }
 
         private void ExecuteCancelEditOperation()
