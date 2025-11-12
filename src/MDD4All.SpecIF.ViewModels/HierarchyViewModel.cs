@@ -29,7 +29,7 @@ namespace MDD4All.SpecIF.ViewModels
 
             InitializeCommands();
 
-            Node rootNode = _specIfDataReader.GetHierarchyByKey(key);
+            Node rootNode = _specIfDataReader.GetHierarchyByKey(key, projectID);
             RootNode = new NodeViewModel(_metadataReader, _specIfDataReader, _specIfDataWriter, this, rootNode);
 
             RootNode.ProjectID = projectID;
@@ -38,10 +38,24 @@ namespace MDD4All.SpecIF.ViewModels
 
             RootNode.IsExpanded = true;
 
+            RootNode.PropertyChanged += OnRootNodePropertyChanged;
+
+
             _treeRootNodes = new ObservableCollection<ITreeNode>();
             _treeRootNodes.Add(RootNode);
 
             SelectedNode = RootNode;
+        }
+
+        private void OnRootNodePropertyChanged(object sender, System.ComponentModel.PropertyChangedEventArgs e)
+        {
+            if(e.PropertyName == "IsLoading")
+            {
+                if(RootNode.ReferencedResourceInitialized)
+                {
+                    RaisePropertyChanged("StateChanged");
+                }
+            }
         }
 
         private void InitializeCommands()
@@ -437,7 +451,7 @@ namespace MDD4All.SpecIF.ViewModels
 
                         selectedElement.HierarchyNode.ResourceReference.Revision = ResourceUnderEdit.Resource.Revision;
 
-                        _specIfDataWriter.UpdateHierarchy(selectedElement.HierarchyNode);
+                        _specIfDataWriter.UpdateHierarchy(selectedElement.HierarchyNode, null, null, ProjectID);
                     }
                 }
                 else
@@ -471,18 +485,18 @@ namespace MDD4All.SpecIF.ViewModels
                             {
                                 selectedNode.Nodes = new List<Node>();
 
-                                selectedNode.Nodes.Add(newNode);
+                                //selectedNode.Nodes.Add(newNode);
 
                                 SelectedNode.Children.Add(newTreeNodeViewModel);
                             }
                             else
                             {
-                                selectedNode.Nodes.Insert(0, newNode);
+                                //selectedNode.Nodes.Insert(0, newNode);
                                 SelectedNode.Children.Insert(0, newTreeNodeViewModel);
                             }
 
                             // add to persistent storage
-                            _specIfDataWriter.AddNodeAsFirstChild(selectedNode.ID, newNode);
+                            _specIfDataWriter.AddNodeAsFirstChild(selectedNode.ID, newNode, ProjectID);
 
                             SelectedNode.IsExpanded = true;
 
@@ -514,7 +528,7 @@ namespace MDD4All.SpecIF.ViewModels
                                 }
 
                                 // add to persistent storage
-                                _specIfDataWriter.AddNodeAsPredecessor(selectedNode.ID, newNode);
+                                _specIfDataWriter.AddNodeAsPredecessor(selectedNode.ID, newNode, ProjectID);
                             }
 
                         }
@@ -534,7 +548,7 @@ namespace MDD4All.SpecIF.ViewModels
                                         parentViewModel.Children.Insert(0, newTreeNodeViewModel);
                                     }
                                     // add to persistent storage
-                                    _specIfDataWriter.AddNodeAsFirstChild(parentViewModel.HierarchyNode.ID, newNode);
+                                    _specIfDataWriter.AddNodeAsFirstChild(parentViewModel.HierarchyNode.ID, newNode, ProjectID);
                                 }
                                 else // the selected node index > 0
                                 {
@@ -546,7 +560,7 @@ namespace MDD4All.SpecIF.ViewModels
                                         parentViewModel.Children.Insert(SelectedNode.Index, newTreeNodeViewModel);
                                     }
                                     // add to persistent storage
-                                    _specIfDataWriter.AddNodeAsPredecessor(predecessorNode.ID, newNode);
+                                    _specIfDataWriter.AddNodeAsPredecessor(predecessorNode.ID, newNode, ProjectID);
                                 }
                             }
                         }

@@ -322,7 +322,11 @@ namespace MDD4All.SpecIF.ViewModels
                 string result = "";
                 if (_resource != null && _resource.Properties != null)
                 {
-                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:identifier").GetStringValue(_metadataReader);
+                    Property? idProperty = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:identifier");
+                    if(idProperty != null)
+                    {
+                        result = idProperty.GetStringValue(_metadataReader);
+                    }
                 }
                 return result;
             }
@@ -372,7 +376,11 @@ namespace MDD4All.SpecIF.ViewModels
                 string result = "";
                 if (_resource != null && _resource.Properties != null)
                 {
-                    result = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:type").GetStringValue(_metadataReader);
+                    Property? typeProperty = _resource.Properties.Find(prop => prop.GetClassTitle(_metadataReader) == "dcterms:type");
+                    if(typeProperty != null)
+                    {
+                        result = typeProperty.GetStringValue(_metadataReader);
+                    }
                 }
                 return result;
             }

@@ -86,7 +86,7 @@ namespace MDD4All.SpecIF.ViewModels
                 string result = _projectDescriptor.Description.GetDefaultStringValue();
                 if (string.IsNullOrEmpty(result))
                 {
-                    result = "<NO DESCRIPTION>";
+                    result = "";
                 }
                 return result;
             }
@@ -96,7 +96,7 @@ namespace MDD4All.SpecIF.ViewModels
 
         private void ExecuteCreateNewHierarchy(Resource resource)
         {
-            _dataWriter.AddResource(resource);
+            _dataWriter.AddResource(resource, ProjectID);
 
             Node rootNode = new Node
             {

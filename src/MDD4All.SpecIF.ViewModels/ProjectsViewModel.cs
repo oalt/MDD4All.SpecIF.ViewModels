@@ -38,15 +38,19 @@ namespace MDD4All.SpecIF.ViewModels
 
             foreach (ProjectDescriptor projectDescriptor in projectDescriptors)
             {
-                ProjectViewModel projectViewModel = new ProjectViewModel(projectDescriptor,
-                                                                         _metadataReader,
-                                                                         _dataWriter,
-                                                                         _dataReader);
+                if (projectDescriptor.ID != SpecIfDataProviderConstants.METADATA_PROJECT_ID) // do not show metadata project
+                {
+                    ProjectViewModel projectViewModel = new ProjectViewModel(projectDescriptor,
+                                                                             _metadataReader,
+                                                                             _dataWriter,
+                                                                             _dataReader);
 
-                Projects.Add(projectViewModel);
-                Projects.Sort((x, y) => string.Compare(x.ProjectTitle, y.ProjectTitle, StringComparison.OrdinalIgnoreCase));
+                    Projects.Add(projectViewModel);
+                    Projects.Sort((x, y) => string.Compare(x.ProjectTitle, y.ProjectTitle, StringComparison.OrdinalIgnoreCase));
+                }
             }
         }
+
         private void InitializeCommands()
         {
             AddNewProjectCommand = new RelayCommand<List<string>>(ExecuteAddNewProject);
@@ -71,7 +75,15 @@ namespace MDD4All.SpecIF.ViewModels
 
                 MultilanguageText newTitle = new MultilanguageText(parameters[0]);
                 MultilanguageText newDescription = new MultilanguageText(parameters[1]);
-                string newProjectID = "PRJ-" + parameters[0].Replace(" ", "").Substring(0, 4).ToUpper() + "-" + newGuid.ToString().Substring(0, 4).ToUpper();
+                string newProjectID = "PRJ-";
+
+                string userGivenNameWithoutSpaces = parameters[0].Replace(" ", "").ToUpper();
+                if (userGivenNameWithoutSpaces.Length > 5)
+                {
+                    userGivenNameWithoutSpaces = userGivenNameWithoutSpaces.Substring(0, 4);
+                }
+
+                newProjectID += userGivenNameWithoutSpaces + "-" + newGuid.ToString().Substring(0, 4).ToUpper();
 
                 newProject.Title = new List<MultilanguageText> { newTitle };
                 newProject.Description = new List<MultilanguageText> { newDescription };
@@ -124,7 +136,7 @@ namespace MDD4All.SpecIF.ViewModels
                     break;
                 }
             }
-            _dataWriter.AddProject(_metadataWriter, editedProject, parameters[2]);
+            _dataWriter.UpdateProject(_metadataWriter, editedProject);
             Projects.Add(editedProjectViewModel);
             Projects.Sort((x, y) => string.Compare(x.ProjectTitle, y.ProjectTitle, StringComparison.OrdinalIgnoreCase));
         }
